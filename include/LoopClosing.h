@@ -1,58 +1,57 @@
 /**
-* This file is part of ORB-SLAM3
-*
-* Copyright (C) 2017-2021 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-* Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-*
-* ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-* License as published by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-* the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with ORB-SLAM3.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
-
+ * This file is part of ORB-SLAM3
+ *
+ * Copyright (C) 2017-2021 Carlos Campos, Richard Elvira, Juan J. Gómez
+ * Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ * Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós,
+ * University of Zaragoza.
+ *
+ * ORB-SLAM3 is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef LOOPCLOSING_H
 #define LOOPCLOSING_H
 
-#include "KeyFrame.h"
-#include "LocalMapping.h"
+#include <boost/algorithm/string.hpp>
+#include <mutex>
+#include <thread>
+
 #include "Atlas.h"
+#include "KeyFrame.h"
+#include "KeyFrameDatabase.h"
+#include "LocalMapping.h"
 #include "ORBVocabulary.h"
+#include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 #include "Tracking.h"
 
-#include "KeyFrameDatabase.h"
-
-#include <boost/algorithm/string.hpp>
-#include <thread>
-#include <mutex>
-#include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
-
-namespace ORB_SLAM3
-{
+namespace ORB_SLAM3 {
 
 class Tracking;
 class LocalMapping;
 class KeyFrameDatabase;
 class Map;
 
-
-class LoopClosing
-{
+class LoopClosing {
 public:
-
-    typedef pair<set<KeyFrame*>,int> ConsistentGroup;    
-    typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
-        Eigen::aligned_allocator<std::pair<KeyFrame* const, g2o::Sim3> > > KeyFrameAndPose;
+    typedef pair<set<KeyFrame*>, int> ConsistentGroup;
+    typedef map<
+        KeyFrame*, g2o::Sim3, std::less<KeyFrame*>,
+        Eigen::aligned_allocator<std::pair<KeyFrame* const, g2o::Sim3> > >
+        KeyFrameAndPose;
 
 public:
-
-    LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,const bool bFixScale, const bool bActiveLC);
+    LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,
+                const bool bFixScale, const bool bActiveLC);
 
     void SetTracker(Tracking* pTracker);
 
@@ -61,7 +60,7 @@ public:
     // Main function
     void Run();
 
-    void InsertKeyFrame(KeyFrame *pKF);
+    void InsertKeyFrame(KeyFrame* pKF);
 
     void RequestReset();
     void RequestResetActiveMap(Map* pMap);
@@ -69,14 +68,14 @@ public:
     // This function will run in a separate thread
     void RunGlobalBundleAdjustment(Map* pActiveMap, unsigned long nLoopKF);
 
-    bool isRunningGBA(){
+    bool isRunningGBA() {
         unique_lock<std::mutex> lock(mMutexGBA);
         return mbRunningGBA;
     }
-    bool isFinishedGBA(){
+    bool isFinishedGBA() {
         unique_lock<std::mutex> lock(mMutexGBA);
         return mbFinishedGBA;
-    }   
+    }
 
     void RequestFinish();
 
@@ -117,32 +116,44 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 protected:
-
     bool CheckNewKeyFrames();
 
-
-    //Methods to implement the new place recognition algorithm
+    // Methods to implement the new place recognition algorithm
     bool NewDetectCommonRegions();
-    bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3 &gScw, int &nNumProjMatches,
-                                        std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
-    bool DetectCommonRegionsFromBoW(std::vector<KeyFrame*> &vpBowCand, KeyFrame* &pMatchedKF, KeyFrame* &pLastCurrentKF, g2o::Sim3 &g2oScw,
-                                     int &nNumCoincidences, std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
-    bool DetectCommonRegionsFromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3 &gScw, int &nNumProjMatches,
-                                            std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
-    int FindMatchesByProjection(KeyFrame* pCurrentKF, KeyFrame* pMatchedKFw, g2o::Sim3 &g2oScw,
-                                set<MapPoint*> &spMatchedMPinOrigin, vector<MapPoint*> &vpMapPoints,
-                                vector<MapPoint*> &vpMatchedMapPoints);
+    bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF,
+                                        KeyFrame* pMatchedKF, g2o::Sim3& gScw,
+                                        int& nNumProjMatches,
+                                        std::vector<MapPoint*>& vpMPs,
+                                        std::vector<MapPoint*>& vpMatchedMPs);
+    bool DetectCommonRegionsFromBoW(std::vector<KeyFrame*>& vpBowCand,
+                                    KeyFrame*& pMatchedKF,
+                                    KeyFrame*& pLastCurrentKF,
+                                    g2o::Sim3& g2oScw, int& nNumCoincidences,
+                                    std::vector<MapPoint*>& vpMPs,
+                                    std::vector<MapPoint*>& vpMatchedMPs);
+    bool DetectCommonRegionsFromLastKF(KeyFrame* pCurrentKF,
+                                       KeyFrame* pMatchedKF, g2o::Sim3& gScw,
+                                       int& nNumProjMatches,
+                                       std::vector<MapPoint*>& vpMPs,
+                                       std::vector<MapPoint*>& vpMatchedMPs);
+    int FindMatchesByProjection(KeyFrame* pCurrentKF, KeyFrame* pMatchedKFw,
+                                g2o::Sim3& g2oScw,
+                                set<MapPoint*>& spMatchedMPinOrigin,
+                                vector<MapPoint*>& vpMapPoints,
+                                vector<MapPoint*>& vpMatchedMapPoints);
 
-
-    void SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap, vector<MapPoint*> &vpMapPoints);
-    void SearchAndFuse(const vector<KeyFrame*> &vConectedKFs, vector<MapPoint*> &vpMapPoints);
+    void SearchAndFuse(const KeyFrameAndPose& CorrectedPosesMap,
+                       vector<MapPoint*>& vpMapPoints);
+    void SearchAndFuse(const vector<KeyFrame*>& vConectedKFs,
+                       vector<MapPoint*>& vpMapPoints);
 
     void CorrectLoop();
 
     void MergeLocal();
     void MergeLocal2();
 
-    void CheckObservations(set<KeyFrame*> &spKFsMap1, set<KeyFrame*> &spKFsMap2);
+    void CheckObservations(set<KeyFrame*>& spKFsMap1,
+                           set<KeyFrame*>& spKFsMap2);
 
     void ResetIfRequested();
     bool mbResetRequested;
@@ -162,7 +173,7 @@ protected:
     KeyFrameDatabase* mpKeyFrameDB;
     ORBVocabulary* mpORBVocabulary;
 
-    LocalMapping *mpLocalMapper;
+    LocalMapping* mpLocalMapper;
 
     std::list<KeyFrame*> mlpLoopKeyFrameQueue;
 
@@ -222,20 +233,16 @@ protected:
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;
 
-
     bool mnFullBAIdx;
-
-
 
     vector<double> vdPR_CurrentTime;
     vector<double> vdPR_MatchedTime;
     vector<int> vnPR_TypeRecogn;
 
-    //DEBUG
+    // DEBUG
     string mstrFolderSubTraj;
     int mnNumCorrection;
     int mnCorrectionGBA;
-
 
     // To (de)activate LC
     bool mbActiveLC = true;
@@ -245,6 +252,6 @@ protected:
 #endif
 };
 
-} //namespace ORB_SLAM
+}  // namespace ORB_SLAM3
 
-#endif // LOOPCLOSING_H
+#endif  // LOOPCLOSING_H
