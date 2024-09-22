@@ -2338,7 +2338,7 @@ void Tracking::MonocularInitialization() {
 
       fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
 
-      // IMUを使用している場合、IMUデータの初期化も行う?
+      // IMUを使用している場合、IMUデータの初期化?も行う
       if (mSensor == System::IMU_MONOCULAR) {
         if (mpImuPreintegratedFromLastKF) {
           delete mpImuPreintegratedFromLastKF;
@@ -2354,6 +2354,8 @@ void Tracking::MonocularInitialization() {
       return;
     }
   } else {
+    //すでに初期化の準備が整っている場合、いくつかのフィルタを通して、ポーズの推定や3D点の再構築を行う
+    //現在のフレームの特徴点が少ない、もしくはフレーム間の時間が1秒以上の場合、フラグをリセットして終了
     if (((int)mCurrentFrame.mvKeys.size() <= 100) ||
         ((mSensor == System::IMU_MONOCULAR) &&
          (mLastFrame.mTimeStamp - mInitialFrame.mTimeStamp > 1.0))) {
@@ -2363,6 +2365,7 @@ void Tracking::MonocularInitialization() {
     }
 
     // Find correspondences
+    //対応点を探し、対応点が100個以上見つからない場合は、フラグをリセットして終了
     ORBmatcher matcher(0.9, true);
     int nmatches = matcher.SearchForInitialization(
         mInitialFrame, mCurrentFrame, mvbPrevMatched, mvIniMatches, 100);
@@ -2373,7 +2376,7 @@ void Tracking::MonocularInitialization() {
       return;
     }
 
-    Sophus::SE3f Tcw;
+    Sophus::SE3f Tcw;            // Tcwはカメラの姿勢
     vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
 
     if (mpCamera->ReconstructWithTwoViews(mInitialFrame.mvKeysUn,
@@ -2387,9 +2390,10 @@ void Tracking::MonocularInitialization() {
       }
 
       // Set Frame Poses
-      mInitialFrame.SetPose(Sophus::SE3f());
+      mInitialFrame.SetPose(Sophus::SE3f()); //初期フレームを原点に設定
       mCurrentFrame.SetPose(Tcw);
 
+      //初期地図の作成
       CreateInitialMapMonocular();
     }
   }
