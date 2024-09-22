@@ -635,16 +635,23 @@ void Tracking::newParameterLoader(Settings *settings) {
 }
 
 bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
+  /**
+   * 読み込まれたカメラ設定ファイルからパラメータを解析し、それらをメンバー変数に設定する
+   * エラーが発生した場合はfalseを返し、問題がなかった場合はtrueを返す
+   */
   mDistCoef = cv::Mat::zeros(4, 1, CV_32F);
   cout << endl << "Camera Parameters: " << endl;
-  bool b_miss_params = false;
+  bool b_miss_params = false; //フラグの準備
 
+  //カメラの種類を読み込む
   string sCameraName = fSettings["Camera.type"];
   if (sCameraName == "PinHole") {
     float fx, fy, cx, cy;
     mImageScale = 1.f;
 
     // Camera calibration parameters
+    // 各パラメータについて取得
+    // 不正なパラメータがあればフラグを立てて最終的にfalseが返される。
     cv::FileNode node = fSettings["Camera.fx"];
     if (!node.empty() && node.isReal()) {
       fx = node.real();
@@ -733,6 +740,7 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
       return false;
     }
 
+    //パラメータのスケーリング
     if (mImageScale != 1.f) {
       // K matrix parameters must be scaled.
       fx = fx * mImageScale;
@@ -741,6 +749,7 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
       cy = cy * mImageScale;
     }
 
+    //カメラモデルの初期化
     vector<float> vCamCalib{fx, fy, cx, cy};
 
     mpCamera = new Pinhole(vCamCalib);
@@ -779,6 +788,7 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
     mImageScale = 1.f;
 
     // Camera calibration parameters
+    // パラメータの取得
     cv::FileNode node = fSettings["Camera.fx"];
     if (!node.empty() && node.isReal()) {
       fx = node.real();
@@ -891,6 +901,7 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
       mK_(1, 2) = cy;
     }
 
+    // ステレオやRGBDセンサーが使われている場合、それらのデータについても取得
     if (mSensor == System::STEREO || mSensor == System::IMU_STEREO ||
         mSensor == System::IMU_RGBD) {
       // Right camera
