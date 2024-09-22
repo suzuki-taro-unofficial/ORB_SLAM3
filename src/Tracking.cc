@@ -2206,9 +2206,11 @@ void Tracking::Track() {
 
 void Tracking::StereoInitialization() {
   /**
-   *
+   *ステレオカメラを使用したSLAMの初期化処理を行う関数
    */
+  //現在のフレームの特徴点の数が500を超えている場合のみ、初期化を行う
   if (mCurrentFrame.N > 500) {
+    // IMUを使用する場合、IMUのデータがそろっていない場合や、加速度が十分でない場合初期化しない。
     if (mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
       if (!mCurrentFrame.mpImuPreintegrated || !mLastFrame.mpImuPreintegrated) {
         cout << "not IMU meas" << endl;
@@ -2222,6 +2224,7 @@ void Tracking::StereoInitialization() {
         return;
       }
 
+      // IMUのデータが充分そろっているので、IMUについて初期化？する
       if (mpImuPreintegratedFromLastKF)
         delete mpImuPreintegratedFromLastKF;
 
@@ -2231,6 +2234,8 @@ void Tracking::StereoInitialization() {
     }
 
     // Set Frame pose to the origin (In case of inertial SLAM to imu)
+    // IMUを使用している場合、IMUデータを使用して初期ポーズを設定する
+    // IMUを使用していない場合、カメラのポーズで初期化する。
     if (mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
       Eigen::Matrix3f Rwb0 = mCurrentFrame.mImuCalib.mTcb.rotationMatrix();
       Eigen::Vector3f twb0 = mCurrentFrame.mImuCalib.mTcb.translation();
