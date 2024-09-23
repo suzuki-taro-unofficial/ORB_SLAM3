@@ -1171,6 +1171,10 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings) {
 }
 
 bool Tracking::ParseORBParamFile(cv::FileStorage &fSettings) {
+  /**
+   *カメラの設定ファイルから、ORB特徴抽出の設定を取得し、それに基づいて初期化を行う
+   *設定ファイルに問題があれば、falseを返し、問題なく初期化が行うことができればtrueを返す
+   */
   bool b_miss_params = false;
   int nFeatures, nLevels, fIniThFAST, fMinThFAST;
   float fScaleFactor;
@@ -1251,6 +1255,10 @@ bool Tracking::ParseORBParamFile(cv::FileStorage &fSettings) {
 }
 
 bool Tracking::ParseIMUParamFile(cv::FileStorage &fSettings) {
+  /**
+   *IMUのパラメータを取得し、IMUに関するパラメータを初期化する。
+   *IMUのパラメータに問題があればfalseを返し、問題がなければtrueを返す。
+   */
   bool b_miss_params = false;
 
   cv::Mat cvTbc;
