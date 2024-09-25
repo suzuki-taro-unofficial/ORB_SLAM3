@@ -81,7 +81,7 @@ DIRECTORY_GRAPH        = YES
 GENERATE_LEGEND        = YES
 INCLUDED_BY_GRAPH      = YES
 INCLUDE_GRAPH          = YES
-DOT_IMAGE_FORMAT       = svg
+DOT_IMAGE_FORMAT       = gif
 
 # More insight to templates, generaly not needed
 TEMPLATE_RELATIONS     = NO
