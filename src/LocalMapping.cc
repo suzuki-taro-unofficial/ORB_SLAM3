@@ -150,6 +150,7 @@ void LocalMapping::Run() {
             int num_edges_BA = 0;
 
             if (!CheckNewKeyFrames() && !stopRequested()) {
+                // ある程度キーフレームが溜まっているならLocalBAをする
                 if (mpAtlas->KeyFramesInMap() > 2) {
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
