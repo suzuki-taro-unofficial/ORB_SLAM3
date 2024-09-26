@@ -385,6 +385,9 @@ void LocalMapping::EmptyQueue() {
     while (CheckNewKeyFrames()) ProcessNewKeyFrame();
 }
 
+/**
+ * 最近追加されたマップポイントを精査し、無効なポイントや観測が少ないポイントを削除する
+ */
 void LocalMapping::MapPointCulling() {
     // Check Recent Added MapPoints
     list<MapPoint*>::iterator lit = mlpRecentAddedMapPoints.begin();
