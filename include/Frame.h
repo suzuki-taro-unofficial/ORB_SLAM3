@@ -46,6 +46,9 @@ class ConstraintPoseImu;
 class GeometricCamera;
 class ORBextractor;
 
+/**
+ * 入力とそれに伴うORB特徴量の管理を行う。
+ */
 class Frame {
 public:
     Frame();
