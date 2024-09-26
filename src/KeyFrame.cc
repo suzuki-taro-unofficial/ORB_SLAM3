@@ -199,6 +199,9 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
     mnOriginMapId = pMap->GetId();
 }
 
+/**
+ * BoWの計算
+ */
 void KeyFrame::ComputeBoW() {
     if (mBowVec.empty() || mFeatVec.empty()) {
         vector<cv::Mat> vCurrentDesc =

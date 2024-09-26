@@ -23,6 +23,9 @@
 
 namespace ORB_SLAM3 {
 
+/**
+ * 3x4みたいな行列を3x1の行列の集まりに変えてるっぽい（n x mのどっちがrowに当たるか覚えてないのでちょっと違うかも）
+ */
 std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors) {
     std::vector<cv::Mat> vDesc;
     vDesc.reserve(Descriptors.rows);
