@@ -337,6 +337,12 @@ bool LocalMapping::CheckNewKeyFrames() {
     return (!mlNewKeyFrames.empty());
 }
 
+/**
+ * - BoWの計算
+ * - MapPointsを新しいキーフレームに関連付け、法線と記述子を更新
+ * - Covisibility グラフのリンクを更新する
+ * - MapにKeyFrameを挿入
+ */
 void LocalMapping::ProcessNewKeyFrame() {
     {
         unique_lock<mutex> lock(mMutexNewKFs);
