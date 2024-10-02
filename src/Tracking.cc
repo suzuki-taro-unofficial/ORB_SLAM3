@@ -2447,8 +2447,8 @@ void Tracking::MonocularInitialization() {
                 mCurrentFrame.mpImuPreintegrated = mpImuPreintegratedFromLastKF;
             }
 
-            　  //初期化の準備が整ったので、フラグを立てる。
-                mbReadyToInitializate = true;
+            // 初期化の準備が整ったので、フラグを立てる。
+            mbReadyToInitializate = true;
 
             return;
         }

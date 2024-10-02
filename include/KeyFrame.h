@@ -427,9 +427,18 @@ public:
     // safe.
 protected:
     // sophus poses
+
+    /// Translation from World to Camera (T):
+    /// ワールド座標系からカメラ座標系への位置を示します。これは、カメラの位置をワールド座標系で表現したものです。(ChatGPT)
     Sophus::SE3<float> mTcw;
+    /// Rotation from Camera to World (R):
+    /// カメラ座標系からワールド座標系への回転を示す行列です。これは、ワールド座標系におけるカメラの向きを逆に表現したものです。(ChatGPT)
     Eigen::Matrix3f mRcw;
+    /// Translation from Camera to World (T):
+    /// カメラ座標系からワールド座標系への位置を示します。これは、カメラの位置をワールド座標系に対して逆に表現したものです。(ChatGPT)
     Sophus::SE3<float> mTwc;
+    /// Rotation from World to Camera (R):
+    /// ワールド座標系からカメラ座標系への回転を示す行列です。これは、カメラの向きをワールド座標系に対して表現したものです。(ChatGPT)
     Eigen::Matrix3f mRwc;
 
     // IMU position

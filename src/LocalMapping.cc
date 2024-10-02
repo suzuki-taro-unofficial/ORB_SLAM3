@@ -24,7 +24,6 @@
 #include <chrono>
 #include <mutex>
 
-#include "Converter.h"
 #include "GeometricTools.h"
 #include "LoopClosing.h"
 #include "ORBmatcher.h"
@@ -150,10 +149,18 @@ void LocalMapping::Run() {
             int num_edges_BA = 0;
 
             if (!CheckNewKeyFrames() && !stopRequested()) {
+                // ある程度キーフレームが溜まっているならLocalBAをする
                 if (mpAtlas->KeyFramesInMap() > 2) {
+                    // IMUを用いており、実際にIMUが有効化されている場合はその情報を用いて
+                    // 動作を行う。
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
+<<<<<<< HEAD
                         float dist =  // dist 歪み
+=======
+                        // 二世代前のキーフレームが持つカメラの情報から移動距離を算出
+                        float dist =
+>>>>>>> 75283b1f58796c9ce2c08b77942a373ca6ba8a3d
                             (mpCurrentKeyFrame->mPrevKF->GetCameraCenter() -
                              mpCurrentKeyFrame->GetCameraCenter())
                                 .norm() +
@@ -177,6 +184,7 @@ void LocalMapping::Run() {
                             }
                         }
 
+                        // 現在のキーフレーム周辺に存在するキーフレームが多い場合にtrue?
                         bool bLarge = ((mpTracker->GetMatchesInliers() > 75) &&
                                        mbMonocular) ||
                                       ((mpTracker->GetMatchesInliers() > 100) &&
@@ -337,6 +345,12 @@ bool LocalMapping::CheckNewKeyFrames() {
     return (!mlNewKeyFrames.empty());
 }
 
+/**
+ * - BoWの計算
+ * - MapPointsを新しいキーフレームに関連付け、法線と記述子を更新
+ * - Covisibility グラフのリンクを更新する
+ * - MapにKeyFrameを挿入
+ */
 void LocalMapping::ProcessNewKeyFrame() {
     {
         unique_lock<mutex> lock(mMutexNewKFs);
@@ -379,6 +393,9 @@ void LocalMapping::EmptyQueue() {
     while (CheckNewKeyFrames()) ProcessNewKeyFrame();
 }
 
+/**
+ * 最近追加されたマップポイントを精査し、無効なポイントや観測が少ないポイントを削除する
+ */
 void LocalMapping::MapPointCulling() {
     // Check Recent Added MapPoints
     list<MapPoint*>::iterator lit = mlpRecentAddedMapPoints.begin();
@@ -1189,8 +1206,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     lpKF.push_front(pKF);
     vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
 
+    // KFが少なすぎるか、経過時間が短すぎるなら処理をしない
     if (vpKF.size() < nMinKF) return;
-
     mFirstTs = vpKF.front()->mTimeStamp;
     if (mpCurrentKeyFrame->mTimeStamp - mFirstTs < minTime) return;
 
@@ -1203,7 +1220,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     }
 
     const int N = vpKF.size();
-    IMU::Bias b(0, 0, 0, 0, 0, 0);
+    IMU::Bias b(0, 0, 0, 0, 0, 0);  // unused
 
     // Compute and KF velocities mRwg estimation
     if (!mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
