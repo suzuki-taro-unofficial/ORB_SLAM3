@@ -124,6 +124,7 @@ void LocalMapping::Run() {
 
             mbAbortBA = false;
 
+            // 新しいキーフレームが存在しないとき
             if (!CheckNewKeyFrames()) {
                 // Find more matches in neighbor keyframes and fuse point
                 // duplications
