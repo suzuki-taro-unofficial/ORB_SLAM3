@@ -177,6 +177,9 @@ protected:
     bool mbAcceptKeyFrames;
     std::mutex mMutexAccept;
 
+    /**
+     * InertialOptimizationとFullInertialBAを行っている
+     */
     void InitializeIMU(float priorG = 1e2, float priorA = 1e6,
                        bool bFirst = false);
     void ScaleRefinement();

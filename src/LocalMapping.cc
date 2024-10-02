@@ -24,7 +24,6 @@
 #include <chrono>
 #include <mutex>
 
-#include "Converter.h"
 #include "GeometricTools.h"
 #include "LoopClosing.h"
 #include "ORBmatcher.h"
@@ -152,8 +151,11 @@ void LocalMapping::Run() {
             if (!CheckNewKeyFrames() && !stopRequested()) {
                 // ある程度キーフレームが溜まっているならLocalBAをする
                 if (mpAtlas->KeyFramesInMap() > 2) {
+                    // IMUを用いており、実際にIMUが有効化されている場合はその情報を用いて
+                    // 動作を行う。
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
+                        // 二世代前のキーフレームが持つカメラの情報から移動距離を算出
                         float dist =
                             (mpCurrentKeyFrame->mPrevKF->GetCameraCenter() -
                              mpCurrentKeyFrame->GetCameraCenter())
@@ -178,6 +180,7 @@ void LocalMapping::Run() {
                             }
                         }
 
+                        // 現在のキーフレーム周辺に存在するキーフレームが多い場合にtrue?
                         bool bLarge = ((mpTracker->GetMatchesInliers() > 75) &&
                                        mbMonocular) ||
                                       ((mpTracker->GetMatchesInliers() > 100) &&
@@ -1199,8 +1202,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     lpKF.push_front(pKF);
     vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
 
+    // KFが少なすぎるか、経過時間が短すぎるなら処理をしない
     if (vpKF.size() < nMinKF) return;
-
     mFirstTs = vpKF.front()->mTimeStamp;
     if (mpCurrentKeyFrame->mTimeStamp - mFirstTs < minTime) return;
 
@@ -1213,7 +1216,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     }
 
     const int N = vpKF.size();
-    IMU::Bias b(0, 0, 0, 0, 0, 0);
+    IMU::Bias b(0, 0, 0, 0, 0, 0);  // unused
 
     // Compute and KF velocities mRwg estimation
     if (!mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
