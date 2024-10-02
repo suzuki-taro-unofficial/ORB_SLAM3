@@ -157,7 +157,7 @@ void LocalMapping::Run() {
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
                         // 二世代前のキーフレームが持つカメラの情報から移動距離を算出
-                        float dist =  // dist 歪み
+                        float dist =
                             (mpCurrentKeyFrame->mPrevKF->GetCameraCenter() -
                              mpCurrentKeyFrame->GetCameraCenter())
                                 .norm() +
