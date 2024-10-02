@@ -258,6 +258,8 @@ public:
 
     // MapPoints associated to keypoints, NULL pointer if no association.
     // Flag to identify outlier associations.
+    /// キーポイントに関連づけられたマップポイント、関連づけがない場合は NULL
+    /// ポインタ。外れ値の関連付けを識別するためのフラグ。(DeepL)
     std::vector<bool> mvbOutlier;
     int mnCloseMPs;
 
