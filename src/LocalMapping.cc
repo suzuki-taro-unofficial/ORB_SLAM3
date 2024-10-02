@@ -183,7 +183,7 @@ void LocalMapping::Run() {
                             }
                         }
 
-                        // 現在のキーフレーム周辺に存在するキーフレームが多い場合にtrue?
+                        // 外れ値でない(Inlier)マップポイントの数が十分な場合にtrue
                         bool bLarge = ((mpTracker->GetMatchesInliers() > 75) &&
                                        mbMonocular) ||
                                       ((mpTracker->GetMatchesInliers() > 100) &&
