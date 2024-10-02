@@ -188,6 +188,7 @@ void LocalMapping::Run() {
                                        mbMonocular) ||
                                       ((mpTracker->GetMatchesInliers() > 100) &&
                                        !mbMonocular);
+                        // IMUが使えるのでLocalInertialBA
                         Optimizer::LocalInertialBA(
                             mpCurrentKeyFrame, &mbAbortBA,
                             mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
@@ -195,6 +196,7 @@ void LocalMapping::Run() {
                             !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
                         b_doneLBA = true;
                     } else {
+                        // IMUが使えないのでLocalBundleAdjustment
                         Optimizer::LocalBundleAdjustment(
                             mpCurrentKeyFrame, &mbAbortBA,
                             mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
