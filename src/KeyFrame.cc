@@ -223,6 +223,7 @@ void KeyFrame::SetPose(const Sophus::SE3f &Tcw) {
 
     if (mImuCalib.mbIsSet)  // TODO Use a flag instead of the OpenCV matrix
     {
+        // TODO: mImuCalib.mTcbは何者？
         mOwb = mRwc * mImuCalib.mTcb.translation() + mTwc.translation();
     }
 }
