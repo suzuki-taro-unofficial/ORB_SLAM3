@@ -917,6 +917,8 @@ bool LocalMapping::SetNotStop(bool flag) {
 
 void LocalMapping::InterruptBA() { mbAbortBA = true; }
 
+/// 冗長なキーフレームのチェック（ローカルキーフレームのみ）
+/// そのキーフレームが見ているマップポイントの90%が、少なくとも他の3つのキーフレーム（同じか、より細かいスケール）で見ている場合、そのキーフレームは冗長とみなされます。
 void LocalMapping::KeyFrameCulling() {
     // Check redundant keyframes (only local keyframes)
     // A keyframe is considered redundant if the 90% of the MapPoints it sees,
