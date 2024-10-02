@@ -1184,6 +1184,10 @@ bool LocalMapping::isFinished() {
     return mbFinished;
 }
 
+/// @brief IMUの初期化し、最適化も施す
+/// @param priorG
+/// @param priorA
+/// @param bFIBA Full IMU Bundle Adjustment を行うかどうか(true -> 行う)
 void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     if (mbResetRequested) return;
 
