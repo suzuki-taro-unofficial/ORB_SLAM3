@@ -57,7 +57,14 @@ public:
      */
     void Run();
 
+    /**
+     * キーフレームをキューに入れて現在行われているBAを停止させる。
+     */
     void InsertKeyFrame(KeyFrame* pKF);
+
+    /**
+     * 入力キューが空になるまでProcessNewKeyFrameを行う。
+     */
     void EmptyQueue();
 
     // Thread Synch
@@ -135,8 +142,19 @@ public:
     int nLBA_abort;
 #endif
 protected:
+    /**
+     * 入力キューにキーフレームがあるならtrueを返す。
+     */
     bool CheckNewKeyFrames();
+
+    /**
+     * - BoWの計算
+     * - MapPointsを新しいキーフレームに関連付け、法線と記述子を更新
+     * - Covisibility グラフのリンクを更新する
+     * - MapにKeyFrameを挿入
+     */
     void ProcessNewKeyFrame();
+
     void CreateNewMapPoints();
 
     void MapPointCulling();
