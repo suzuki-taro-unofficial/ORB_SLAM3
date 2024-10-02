@@ -127,7 +127,10 @@ public:
 
 public:
     // Sophus/Eigen implementation
+
+    /// IMU座標系からカメラ座標系への変換を行う気がする。
     Sophus::SE3<float> mTcb;
+    /// `mTcb`の逆。
     Sophus::SE3<float> mTbc;
     Eigen::DiagonalMatrix<float, 6> Cov, CovWalk;
     bool mbIsSet;
