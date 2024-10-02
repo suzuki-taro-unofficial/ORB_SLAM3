@@ -174,7 +174,12 @@ public:
 
 private:
     // Sophus/Eigen migration
+
+    /// Translation from World to Camera (T):
+    /// ワールド座標系からカメラ座標系への位置を示します。これは、カメラの位置をワールド座標系で表現したものです。(ChatGPT)
     Sophus::SE3<float> mTcw;
+    /// Rotation from World to Camera (R):
+    /// ワールド座標系からカメラ座標系への回転を示す行列です。これは、カメラの向きをワールド座標系に対して表現したものです。(ChatGPT)
     Eigen::Matrix<float, 3, 3> mRwc;
     Eigen::Matrix<float, 3, 1> mOw;
     Eigen::Matrix<float, 3, 3> mRcw;
