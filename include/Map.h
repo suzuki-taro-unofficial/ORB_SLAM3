@@ -201,7 +201,19 @@ protected:
     bool mbBad = false;
 
     bool mbIsInertial;
+
+    // NOTE:
+    // mbIMU_BA1とmbIMU_BA2は、IMUに対する最適化を2回行う際に、何回行ったかを記憶するために存在する気がする。
+    // (mbIMU_BA1, mbIMU_BA2) について
+    // - (false, false) -> 最適化が1回も行われていない
+    // - (true, false) -> 最適化が1回行われた
+    // - (true, true) -> 最適化が2回行われた
+    // となるはず。
+
+    /// 1回目のIMUに対する最適化が完了したならtrue
     bool mbIMU_BA1;
+
+    /// 2回目のIMUに対する最適化が完了したならtrue
     bool mbIMU_BA2;
 
     // Mutex
