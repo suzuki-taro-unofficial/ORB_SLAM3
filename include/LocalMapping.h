@@ -48,7 +48,12 @@ public:
 
     void SetTracker(Tracking* pTracker);
 
-    // Main function
+    /**
+     * 内部でループをしており、以下の動作を行う
+     * - 入力キューに入っているキーフレームを処理する。
+     * - IMUの初期化と最適化を行う。
+     * - LoopClosingへ現在のキーフレームを渡す。
+     */
     void Run();
 
     void InsertKeyFrame(KeyFrame* pKF);

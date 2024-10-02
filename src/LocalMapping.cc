@@ -35,7 +35,7 @@ LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
                            bool bInertial, const string& _strSeqName)
     : mpSystem(pSys),
       mbMonocular(bMonocular),
-      mbInertial(bInertial),
+      mbInertial(bInertial),  // inertial 慣性
       mbResetRequested(false),
       mbResetRequestedActiveMap(false),
       mbFinishRequested(false),
@@ -127,7 +127,7 @@ void LocalMapping::Run() {
             // 新しいキーフレームが存在しないとき
             if (!CheckNewKeyFrames()) {
                 // Find more matches in neighbor keyframes and fuse point
-                // duplications
+                // duplications 重複
                 SearchInNeighbors();
             }
 
@@ -156,8 +156,12 @@ void LocalMapping::Run() {
                     // 動作を行う。
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
+<<<<<<< HEAD
+                        float dist =  // dist 歪み
+=======
                         // 二世代前のキーフレームが持つカメラの情報から移動距離を算出
                         float dist =
+>>>>>>> 75283b1f58796c9ce2c08b77942a373ca6ba8a3d
                             (mpCurrentKeyFrame->mPrevKF->GetCameraCenter() -
                              mpCurrentKeyFrame->GetCameraCenter())
                                 .norm() +
@@ -430,6 +434,7 @@ void LocalMapping::MapPointCulling() {
 
 void LocalMapping::CreateNewMapPoints() {
     // Retrieve neighbor keyframes in covisibility graph
+    // retrieve 取り出す
     int nn = 10;
     // For stereo inertial case
     if (mbMonocular) nn = 30;
@@ -494,6 +499,7 @@ void LocalMapping::CreateNewMapPoints() {
         }
 
         // Search matches that fullfil epipolar constraint
+        // epipolar constraint エピポーラ制約
         vector<pair<size_t, size_t>> vMatchedIndices;
         bool bCoarse = mbInertial &&
                        mpTracker->mState == Tracking::RECENTLY_LOST &&
