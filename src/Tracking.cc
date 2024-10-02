@@ -2958,6 +2958,7 @@ bool Tracking::TrackLocalMap() {
     // Update MapPoints Statistics
     for (int i = 0; i < mCurrentFrame.N; i++) {
         if (mCurrentFrame.mvpMapPoints[i]) {
+            // マップポイントが外れ値でない
             if (!mCurrentFrame.mvbOutlier[i]) {
                 mCurrentFrame.mvpMapPoints[i]->IncreaseFound();
                 if (!mbOnlyTracking) {
