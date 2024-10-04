@@ -118,7 +118,7 @@ void LoopClosing::Run() {
                 std::chrono::steady_clock::now();
 #endif
 
-            //ループ候補の検出
+            //ループの検出
             bool bFindedRegion = NewDetectCommonRegions();
 
 #ifdef REGISTER_TIMES
@@ -592,6 +592,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
 /**
  *キーフレーム間のSim3変換を見つけ、最適化を行う。
+ *ReffineはRefineのタイプミス?
  */
 bool LoopClosing::DetectAndReffineSim3FromLastKF(
     KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3& gScw,
@@ -620,7 +621,7 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
         if (mpTracker->mSensor == System::IMU_MONOCULAR &&
             !pCurrentKF->GetMap()->GetIniertialBA2())
             bFixedScale = false;
-        /// Sim3最適化を行い、より精度の高い一致点を検出し、その数を格納する。
+        /// Sim3最適化を行い、さらに一致点を検出し、その数を格納する。
         int numOptMatches =
             Optimizer::OptimizeSim3(mpCurrentKF, pMatchedKF, vpMatchedMPs, gScm,
                                     10, bFixedScale, mHessian7x7, true);
