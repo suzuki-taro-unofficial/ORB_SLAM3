@@ -118,6 +118,7 @@ void LoopClosing::Run() {
                 std::chrono::steady_clock::now();
 #endif
 
+            //ループ候補の検出
             bool bFindedRegion = NewDetectCommonRegions();
 
 #ifdef REGISTER_TIMES
@@ -589,6 +590,9 @@ bool LoopClosing::NewDetectCommonRegions() {
     return false;
 }
 
+/**
+ *キーフレーム間のSim3変換を見つけ、最適化を行う。
+ */
 bool LoopClosing::DetectAndReffineSim3FromLastKF(
     KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3& gScw,
     int& nNumProjMatches, std::vector<MapPoint*>& vpMPs,
