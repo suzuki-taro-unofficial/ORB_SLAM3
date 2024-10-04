@@ -427,7 +427,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         g2o::Sim3 gScw = gScl * mg2oLoopSlw;
         int numProjMatches = 0;
         vector<MapPoint*> vpMatchedMPs;
-        /// DetectAndReffineSim3FromLastKFを用いて過去のキーフレームと一致する領域を検出する。ReffineはRefineのタイプミスっぽそう。
+        ///過去のキーフレームと一致する領域を検出する。ReffineはRefineのタイプミスっぽそう。
         bool bCommonRegion = DetectAndReffineSim3FromLastKF(
             mpCurrentKF, mpLoopMatchedKF, gScw, numProjMatches, mvpLoopMPs,
             vpMatchedMPs);
@@ -598,6 +598,7 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
     int& nNumProjMatches, std::vector<MapPoint*>& vpMPs,
     std::vector<MapPoint*>& vpMatchedMPs) {
     set<MapPoint*> spAlreadyMatchedMPs;
+    ///キーフレーム間で共通の3D点を検出し、その数を格納する
     nNumProjMatches = FindMatchesByProjection(
         pCurrentKF, pMatchedKF, gScw, spAlreadyMatchedMPs, vpMPs, vpMatchedMPs);
 
@@ -619,6 +620,7 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
         if (mpTracker->mSensor == System::IMU_MONOCULAR &&
             !pCurrentKF->GetMap()->GetIniertialBA2())
             bFixedScale = false;
+        /// Sim3最適化を行い、より精度の高い一致点を検出し、その数を格納する。
         int numOptMatches =
             Optimizer::OptimizeSim3(mpCurrentKF, pMatchedKF, vpMatchedMPs, gScm,
                                     10, bFixedScale, mHessian7x7, true);
@@ -634,9 +636,11 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
             vpMatchedMP.resize(mpCurrentKF->GetMapPointMatches().size(),
                                static_cast<MapPoint*>(NULL));
 
+            ///再び一致点を検出し、結果を確認。
             nNumProjMatches = FindMatchesByProjection(
                 pCurrentKF, pMatchedKF, gScw_estimation, spAlreadyMatchedMPs,
                 vpMPs, vpMatchedMPs);
+            ///充分な一致点を検出できたなら、trueを返す。
             if (nNumProjMatches >= nProjMatchesRep) {
                 gScw = gScw_estimation;
                 return true;
