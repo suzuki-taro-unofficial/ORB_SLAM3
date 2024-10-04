@@ -415,7 +415,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         std::chrono::steady_clock::now();
 #endif
 
-    ///??? mnLoopNumCoincidencesがいつ0より大きくなる
+    ///??? mnLoopNumCoincidencesがいつ0より大きくなるのか
     if (mnLoopNumCoincidences > 0) {
         bCheckSpatial = true;
         // Find from the last KF candidates
@@ -426,6 +426,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         g2o::Sim3 gScw = gScl * mg2oLoopSlw;
         int numProjMatches = 0;
         vector<MapPoint*> vpMatchedMPs;
+        /// DetectAndReffineSim3FromLastKFを用いて過去のキーフレームと一致する領域を検出する。ReffineはRefineのタイプミスっぽそう。
         bool bCommonRegion = DetectAndReffineSim3FromLastKF(
             mpCurrentKF, mpLoopMatchedKF, gScw, numProjMatches, mvpLoopMPs,
             vpMatchedMPs);
@@ -461,6 +462,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
     // Merge candidates
     bool bMergeDetectedInKF = false;
+    ///??? mnMergeNumCoincidencesがいつ0より大きくなるのか
     if (mnMergeNumCoincidences > 0) {
         // Find from the last KF candidates
         Sophus::SE3d mTcl =
@@ -548,6 +550,7 @@ bool LoopClosing::NewDetectCommonRegions() {
     std::chrono::steady_clock::time_point time_StartEstSim3_2 =
         std::chrono::steady_clock::now();
 #endif
+    ///幾何学的候補が見つからないならBoWを用いてループ検出を行う。
     // Check the BoW candidates if the geometric candidate list is empty
     // Loop candidates
     if (!bLoopDetectedInKF && !vpLoopBowCand.empty()) {
