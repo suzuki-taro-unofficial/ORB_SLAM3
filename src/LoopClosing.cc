@@ -354,11 +354,16 @@ bool LoopClosing::CheckNewKeyFrames() {
     return (!mlpLoopKeyFrameQueue.empty());
 }
 
+/**
+ *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
+ *検出できたらtrueを返す。
+ */
 bool LoopClosing::NewDetectCommonRegions() {
     // To deactivate placerecognition. No loopclosing nor merging will be
     // performed
     if (!mbActiveLC) return false;
 
+    ///キーフレームの取り出し
     {
         unique_lock<mutex> lock(mMutexLoopQueue);
         mpCurrentKF = mlpLoopKeyFrameQueue.front();
@@ -371,12 +376,14 @@ bool LoopClosing::NewDetectCommonRegions() {
         mpLastMap = mpCurrentKF->GetMap();
     }
 
+    ///慣性情報を使用しているなら処理をスキップする。
     if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
         mpKeyFrameDB->add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
     }
 
+    ///ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
     if (mpTracker->mSensor == System::STEREO &&
         mpLastMap->GetAllKeyFrames().size() < 5)  // 12
     {
@@ -387,6 +394,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         return false;
     }
 
+    ///キーフレームの数が12未満なら処理をスキップする。
     if (mpLastMap->GetAllKeyFrames().size() < 12) {
         // cout << "LoopClousure: Stereo KF inserted without check, map is
         // small: " << mpCurrentKF->mnId << endl;
@@ -406,6 +414,8 @@ bool LoopClosing::NewDetectCommonRegions() {
     std::chrono::steady_clock::time_point time_StartEstSim3_1 =
         std::chrono::steady_clock::now();
 #endif
+
+    ///??? mnLoopNumCoincidencesがいつ0より大きくなる
     if (mnLoopNumCoincidences > 0) {
         bCheckSpatial = true;
         // Find from the last KF candidates
