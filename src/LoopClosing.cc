@@ -118,7 +118,7 @@ void LoopClosing::Run() {
                 std::chrono::steady_clock::now();
 #endif
 
-            //ループの検出
+            ///ループの検出およびマージの検出
             bool bFindedRegion = NewDetectCommonRegions();
 
 #ifdef REGISTER_TIMES
@@ -427,7 +427,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         g2o::Sim3 gScw = gScl * mg2oLoopSlw;
         int numProjMatches = 0;
         vector<MapPoint*> vpMatchedMPs;
-        ///過去のキーフレームと一致する領域を検出する。ReffineはRefineのタイプミスっぽそう。
+        ///過去のキーフレームと一致する領域を検出する。
         bool bCommonRegion = DetectAndReffineSim3FromLastKF(
             mpCurrentKF, mpLoopMatchedKF, gScw, numProjMatches, mvpLoopMPs,
             vpMatchedMPs);
@@ -486,6 +486,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oMergeSlw = gScw;
             mvpMergeMatchedMPs = vpMatchedMPs;
 
+            ///マージの候補が3つ以上あればフラグを立てる
             mbMergeDetected = mnMergeNumCoincidences >= 3;
         } else {
             mbMergeDetected = false;
