@@ -422,7 +422,6 @@ bool LoopClosing::NewDetectCommonRegions() {
         std::chrono::steady_clock::now();
 #endif
 
-    ///??? mnLoopNumCoincidencesがいつ0より大きくなるのか
     if (mnLoopNumCoincidences > 0) {
         bCheckSpatial = true;
         // Find from the last KF candidates
@@ -470,7 +469,6 @@ bool LoopClosing::NewDetectCommonRegions() {
 
     // Merge candidates
     bool bMergeDetectedInKF = false;
-    ///??? mnMergeNumCoincidencesがいつ0より大きくなるのか
     if (mnMergeNumCoincidences > 0) {
         // Find from the last KF candidates
         Sophus::SE3d mTcl =
