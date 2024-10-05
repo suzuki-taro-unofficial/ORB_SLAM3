@@ -133,6 +133,7 @@ void LoopClosing::Run() {
 #endif
             if (bFindedRegion) {
                 if (mbMergeDetected) {
+                    /// IMUを使用していてIMUが初期化されていない場合、処理を中断する。
                     if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
                          mpTracker->mSensor == System::IMU_STEREO ||
                          mpTracker->mSensor == System::IMU_RGBD) &&
@@ -153,6 +154,7 @@ void LoopClosing::Run() {
 
                         mSold_new = (gSw2c * gScw1);
 
+                        /// IMUを使用しているなら、IMUを用いてマージの精度を上げる。
                         if (mpCurrentKF->GetMap()->IsInertial() &&
                             mpMergeMatchedKF->GetMap()->IsInertial()) {
                             cout << "Merge check transformation with IMU"
@@ -200,6 +202,7 @@ void LoopClosing::Run() {
 
                         nMerges += 1;
 #endif
+                        ///マージの実行
                         // TODO UNCOMMENT
                         if (mpTracker->mSensor == System::IMU_MONOCULAR ||
                             mpTracker->mSensor == System::IMU_STEREO ||
@@ -237,6 +240,7 @@ void LoopClosing::Run() {
                     mnMergeNumNotFound = 0;
                     mbMergeDetected = false;
 
+                    ///マージした場合、ループの検出はリセットされる。
                     if (mbLoopDetected) {
                         // Reset Loop variables
                         mpLoopLastCurrentKF->SetErase();
@@ -249,6 +253,7 @@ void LoopClosing::Run() {
                     }
                 }
 
+                ///ループのみが検出された場合の処理。
                 if (mbLoopDetected) {
                     bool bGoodLoop = true;
                     vdPR_CurrentTime.push_back(mpCurrentKF->mTimeStamp);
@@ -260,6 +265,7 @@ void LoopClosing::Run() {
 
                     mg2oLoopScw =
                         mg2oLoopSlw;  //*mvg2oSim3LoopTcw[nCurrentIndex];
+                    /// IMUを用いてループが良好であるか検証する。
                     if (mpCurrentKF->GetMap()->IsInertial()) {
                         Sophus::SE3d Twc =
                             mpCurrentKF->GetPoseInverse().cast<double>();
@@ -440,6 +446,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oLoopSlw = gScw;
             mvpLoopMatchedMPs = vpMatchedMPs;
 
+            ///ループの候補が3つ以上見つかったらフラグを立てる。
             mbLoopDetected = mnLoopNumCoincidences >= 3;
             mnLoopNumNotFound = 0;
 
