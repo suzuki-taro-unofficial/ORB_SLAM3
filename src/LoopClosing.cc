@@ -1069,6 +1069,9 @@ int LoopClosing::FindMatchesByProjection(
     return num_matches;
 }
 
+/**
+ *キーフレームやマップポイントの補正、グローバルバンドル調整を行う関数。
+ */
 void LoopClosing::CorrectLoop() {
     // cout << "Loop detected!" << endl;
 
