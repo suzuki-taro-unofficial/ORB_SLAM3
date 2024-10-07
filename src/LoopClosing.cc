@@ -657,6 +657,9 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
     return false;
 }
 
+/**
+ *BoWを用いた一致点の検出
+ */
 bool LoopClosing::DetectCommonRegionsFromBoW(
     std::vector<KeyFrame*>& vpBowCand, KeyFrame*& pMatchedKF2,
     KeyFrame*& pLastCurrentKF, g2o::Sim3& g2oScw, int& nNumCoincidences,
