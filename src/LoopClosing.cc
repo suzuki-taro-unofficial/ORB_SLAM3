@@ -118,6 +118,7 @@ void LoopClosing::Run() {
                 std::chrono::steady_clock::now();
 #endif
 
+            /// ループの検出およびマージの検出
             bool bFindedRegion = NewDetectCommonRegions();
 
 #ifdef REGISTER_TIMES
@@ -132,6 +133,7 @@ void LoopClosing::Run() {
 #endif
             if (bFindedRegion) {
                 if (mbMergeDetected) {
+                    /// IMUを使用していてIMUが初期化されていない場合、処理を中断する。
                     if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
                          mpTracker->mSensor == System::IMU_STEREO ||
                          mpTracker->mSensor == System::IMU_RGBD) &&
@@ -152,6 +154,7 @@ void LoopClosing::Run() {
 
                         mSold_new = (gSw2c * gScw1);
 
+                        /// IMUを使用しているなら、IMUを用いてマージの精度を上げる。
                         if (mpCurrentKF->GetMap()->IsInertial() &&
                             mpMergeMatchedKF->GetMap()->IsInertial()) {
                             cout << "Merge check transformation with IMU"
@@ -199,6 +202,7 @@ void LoopClosing::Run() {
 
                         nMerges += 1;
 #endif
+                        /// マージの実行
                         // TODO UNCOMMENT
                         if (mpTracker->mSensor == System::IMU_MONOCULAR ||
                             mpTracker->mSensor == System::IMU_STEREO ||
@@ -236,6 +240,7 @@ void LoopClosing::Run() {
                     mnMergeNumNotFound = 0;
                     mbMergeDetected = false;
 
+                    /// マージした場合、ループの検出はリセットされる。
                     if (mbLoopDetected) {
                         // Reset Loop variables
                         mpLoopLastCurrentKF->SetErase();
@@ -248,6 +253,7 @@ void LoopClosing::Run() {
                     }
                 }
 
+                /// ループのみが検出された場合の処理。
                 if (mbLoopDetected) {
                     bool bGoodLoop = true;
                     vdPR_CurrentTime.push_back(mpCurrentKF->mTimeStamp);
@@ -259,6 +265,7 @@ void LoopClosing::Run() {
 
                     mg2oLoopScw =
                         mg2oLoopSlw;  //*mvg2oSim3LoopTcw[nCurrentIndex];
+                    /// IMUを用いてループが良好であるか検証する。
                     if (mpCurrentKF->GetMap()->IsInertial()) {
                         Sophus::SE3d Twc =
                             mpCurrentKF->GetPoseInverse().cast<double>();
@@ -354,15 +361,16 @@ bool LoopClosing::CheckNewKeyFrames() {
     return (!mlpLoopKeyFrameQueue.empty());
 }
 
-/// hoge
-/// -
-/// いくつかの判定式のどれかに引っかかる場合、CurrentKFをKeyFrameDBに保存してSetEraseしてfalseを返す
-/// - hoge
+/**
+ *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
+ *検出できたらtrueを返す。
+ */
 bool LoopClosing::NewDetectCommonRegions() {
     // To deactivate placerecognition. No loopclosing nor merging will be
     // performed
     if (!mbActiveLC) return false;
 
+    /// キーフレームの取り出し
     {
         unique_lock<mutex> lock(mMutexLoopQueue);
         mpCurrentKF = mlpLoopKeyFrameQueue.front();
@@ -375,14 +383,14 @@ bool LoopClosing::NewDetectCommonRegions() {
         mpLastMap = mpCurrentKF->GetMap();
     }
 
-    // KFをDBにいれる処理
+    /// 慣性情報を使用しているなら処理をスキップする。
     if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
         mpKeyFrameDB->add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
     }
 
-    // KFをDBにいれる処理
+    /// ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
     if (mpTracker->mSensor == System::STEREO &&
         mpLastMap->GetAllKeyFrames().size() < 5)  // 12
     {
@@ -393,7 +401,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         return false;
     }
 
-    // KFをDBにいれる処理
+    /// キーフレームの数が12未満なら処理をスキップする。
     if (mpLastMap->GetAllKeyFrames().size() < 12) {
         // cout << "LoopClousure: Stereo KF inserted without check, map is
         // small: " << mpCurrentKF->mnId << endl;
@@ -413,6 +421,7 @@ bool LoopClosing::NewDetectCommonRegions() {
     std::chrono::steady_clock::time_point time_StartEstSim3_1 =
         std::chrono::steady_clock::now();
 #endif
+
     if (mnLoopNumCoincidences > 0) {
         bCheckSpatial = true;
         // Find from the last KF candidates
@@ -423,6 +432,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         g2o::Sim3 gScw = gScl * mg2oLoopSlw;
         int numProjMatches = 0;
         vector<MapPoint*> vpMatchedMPs;
+        /// 過去のキーフレームと一致する領域を検出する。
         bool bCommonRegion = DetectAndReffineSim3FromLastKF(
             mpCurrentKF, mpLoopMatchedKF, gScw, numProjMatches, mvpLoopMPs,
             vpMatchedMPs);
@@ -435,6 +445,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oLoopSlw = gScw;
             mvpLoopMatchedMPs = vpMatchedMPs;
 
+            /// ループの候補が3つ以上見つかったらフラグを立てる。
             mbLoopDetected = mnLoopNumCoincidences >= 3;
             mnLoopNumNotFound = 0;
 
@@ -480,6 +491,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oMergeSlw = gScw;
             mvpMergeMatchedMPs = vpMatchedMPs;
 
+            /// マージの候補が3つ以上あればフラグを立てる
             mbMergeDetected = mnMergeNumCoincidences >= 3;
         } else {
             mbMergeDetected = false;
@@ -545,6 +557,7 @@ bool LoopClosing::NewDetectCommonRegions() {
     std::chrono::steady_clock::time_point time_StartEstSim3_2 =
         std::chrono::steady_clock::now();
 #endif
+    /// 幾何学的候補が見つからないならBoWを用いてループ検出を行う。
     // Check the BoW candidates if the geometric candidate list is empty
     // Loop candidates
     if (!bLoopDetectedInKF && !vpLoopBowCand.empty()) {
@@ -583,11 +596,16 @@ bool LoopClosing::NewDetectCommonRegions() {
     return false;
 }
 
+/**
+ *キーフレーム間のSim3変換を見つけ、最適化を行う。
+ *ReffineはRefineのタイプミス?
+ */
 bool LoopClosing::DetectAndReffineSim3FromLastKF(
     KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3& gScw,
     int& nNumProjMatches, std::vector<MapPoint*>& vpMPs,
     std::vector<MapPoint*>& vpMatchedMPs) {
     set<MapPoint*> spAlreadyMatchedMPs;
+    /// キーフレーム間で共通の3D点を検出し、その数を格納する
     nNumProjMatches = FindMatchesByProjection(
         pCurrentKF, pMatchedKF, gScw, spAlreadyMatchedMPs, vpMPs, vpMatchedMPs);
 
@@ -609,6 +627,7 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
         if (mpTracker->mSensor == System::IMU_MONOCULAR &&
             !pCurrentKF->GetMap()->GetIniertialBA2())
             bFixedScale = false;
+        /// Sim3最適化を行い、さらに一致点を検出し、その数を格納する。
         int numOptMatches =
             Optimizer::OptimizeSim3(mpCurrentKF, pMatchedKF, vpMatchedMPs, gScm,
                                     10, bFixedScale, mHessian7x7, true);
@@ -624,9 +643,11 @@ bool LoopClosing::DetectAndReffineSim3FromLastKF(
             vpMatchedMP.resize(mpCurrentKF->GetMapPointMatches().size(),
                                static_cast<MapPoint*>(NULL));
 
+            /// 再び一致点を検出し、結果を確認。
             nNumProjMatches = FindMatchesByProjection(
                 pCurrentKF, pMatchedKF, gScw_estimation, spAlreadyMatchedMPs,
                 vpMPs, vpMatchedMPs);
+            /// 充分な一致点を検出できたなら、trueを返す。
             if (nNumProjMatches >= nProjMatchesRep) {
                 gScw = gScw_estimation;
                 return true;
@@ -1046,6 +1067,9 @@ int LoopClosing::FindMatchesByProjection(
     return num_matches;
 }
 
+/**
+ *キーフレームやマップポイントの補正、グローバルバンドル調整を行う関数。
+ */
 void LoopClosing::CorrectLoop() {
     // cout << "Loop detected!" << endl;
 
@@ -1317,6 +1341,7 @@ void LoopClosing::CorrectLoop() {
             ->mnId;  // TODO old varible, it is not use in the new algorithm
 }
 
+/// IMUを使用していない場合のマージ処理
 void LoopClosing::MergeLocal() {
     int numTemporalKFs =
         25;  // Temporal KFs in the local window if the map is inertial.
@@ -1905,6 +1930,7 @@ void LoopClosing::MergeLocal() {
     mpAtlas->RemoveBadMaps();
 }
 
+/// IMUを使用している場合のマージ処理
 void LoopClosing::MergeLocal2() {
     // cout << "Merge detected!!!!" << endl;
 
