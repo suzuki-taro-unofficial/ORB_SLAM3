@@ -383,7 +383,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         mpLastMap = mpCurrentKF->GetMap();
     }
 
-    /// 慣性情報を使用しているなら処理をスキップする。
+    /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
     if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
         mpKeyFrameDB->add(mpCurrentKF);
         mpCurrentKF->SetErase();
