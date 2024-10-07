@@ -265,6 +265,7 @@ void Map::SetInertialSensor() {
     mbIsInertial = true;
 }
 
+/// IMUが使用されているかどうか
 bool Map::IsInertial() {
     unique_lock<mutex> lock(mMutexMap);
     return mbIsInertial;
