@@ -1341,6 +1341,7 @@ void LoopClosing::CorrectLoop() {
             ->mnId;  // TODO old varible, it is not use in the new algorithm
 }
 
+/// IMUを使用していない場合のマージ処理
 void LoopClosing::MergeLocal() {
     int numTemporalKFs =
         25;  // Temporal KFs in the local window if the map is inertial.
@@ -1929,6 +1930,7 @@ void LoopClosing::MergeLocal() {
     mpAtlas->RemoveBadMaps();
 }
 
+/// IMUを使用している場合のマージ処理
 void LoopClosing::MergeLocal2() {
     // cout << "Merge detected!!!!" << endl;
 
