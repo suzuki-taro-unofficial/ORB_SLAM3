@@ -354,6 +354,10 @@ bool LoopClosing::CheckNewKeyFrames() {
     return (!mlpLoopKeyFrameQueue.empty());
 }
 
+/// hoge
+/// -
+/// いくつかの判定式のどれかに引っかかる場合、CurrentKFをKeyFrameDBに保存してSetEraseしてfalseを返す
+/// - hoge
 bool LoopClosing::NewDetectCommonRegions() {
     // To deactivate placerecognition. No loopclosing nor merging will be
     // performed
@@ -371,12 +375,14 @@ bool LoopClosing::NewDetectCommonRegions() {
         mpLastMap = mpCurrentKF->GetMap();
     }
 
+    // KFをDBにいれる処理
     if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
         mpKeyFrameDB->add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
     }
 
+    // KFをDBにいれる処理
     if (mpTracker->mSensor == System::STEREO &&
         mpLastMap->GetAllKeyFrames().size() < 5)  // 12
     {
@@ -387,6 +393,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         return false;
     }
 
+    // KFをDBにいれる処理
     if (mpLastMap->GetAllKeyFrames().size() < 12) {
         // cout << "LoopClousure: Stereo KF inserted without check, map is
         // small: " << mpCurrentKF->mnId << endl;
