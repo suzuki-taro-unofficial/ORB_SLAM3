@@ -336,7 +336,7 @@ vector<KeyFrame *> KeyFrame::GetVectorCovisibleKeyFrames() {
 }
 
 /**
- *
+ * 接続されているKF群を共有MP数の多い順にN個返す
  */
 vector<KeyFrame *> KeyFrame::GetBestCovisibilityKeyFrames(const int &N) {
     unique_lock<mutex> lock(mMutexConnections);
