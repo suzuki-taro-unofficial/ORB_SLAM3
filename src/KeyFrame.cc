@@ -335,6 +335,9 @@ vector<KeyFrame *> KeyFrame::GetVectorCovisibleKeyFrames() {
     return mvpOrderedConnectedKeyFrames;
 }
 
+/**
+ *
+ */
 vector<KeyFrame *> KeyFrame::GetBestCovisibilityKeyFrames(const int &N) {
     unique_lock<mutex> lock(mMutexConnections);
     if ((int)mvpOrderedConnectedKeyFrames.size() < N)
@@ -449,6 +452,7 @@ MapPoint *KeyFrame::GetMapPoint(const size_t &idx) {
 void KeyFrame::UpdateConnections(bool upParent) {
     map<KeyFrame *, int> KFcounter;
 
+    // KF上のマップポイント群
     vector<MapPoint *> vpMP;
 
     {
@@ -458,6 +462,8 @@ void KeyFrame::UpdateConnections(bool upParent) {
 
     // For all map points in keyframe check in which other keyframes are they
     // seen Increase counter for those keyframes
+    // キーフレーム内のすべてのマップポイントについて、そのマップポイントを観測するKF
+    // を取得し、KFCounterに記録
     for (vector<MapPoint *>::iterator vit = vpMP.begin(), vend = vpMP.end();
          vit != vend; vit++) {
         MapPoint *pMP = *vit;
@@ -489,6 +495,8 @@ void KeyFrame::UpdateConnections(bool upParent) {
     KeyFrame *pKFmax = NULL;
     int th = 15;
 
+    // 接続を一時保存する
+    // pairの第位置要素は共有するマップポイントの数、第二要素は対象のKF
     vector<pair<int, KeyFrame *>> vPairs;
     vPairs.reserve(KFcounter.size());
     if (!upParent) cout << "UPDATE_CONN: current KF " << mnId << endl;
@@ -502,25 +510,30 @@ void KeyFrame::UpdateConnections(bool upParent) {
             nmax = mit->second;
             pKFmax = mit->first;
         }
+        // マップポイントを閾値より多く共有するKFがあれば接続を追加する
         if (mit->second >= th) {
             vPairs.push_back(make_pair(mit->second, mit->first));
             (mit->first)->AddConnection(this, mit->second);
         }
     }
 
+    // 閾値を超えるものが一つもなかった場合には、一番多くマップポイントを共有するKFと接続する
     if (vPairs.empty()) {
         vPairs.push_back(make_pair(nmax, pKFmax));
         pKFmax->AddConnection(this, nmax);
     }
 
+    // 共有するMPの数でソート
     sort(vPairs.begin(), vPairs.end());
     list<KeyFrame *> lKFs;
     list<int> lWs;
+    // それぞれlKFs(接続されたKF)とlWs(共有MP数：重み)にいれる
     for (size_t i = 0; i < vPairs.size(); i++) {
         lKFs.push_front(vPairs[i].second);
         lWs.push_front(vPairs[i].first);
     }
 
+    // メンバ変数の更新
     {
         unique_lock<mutex> lockCon(mMutexConnections);
 

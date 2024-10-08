@@ -464,8 +464,15 @@ protected:
     // Grid over the image to speed up feature matching
     std::vector<std::vector<std::vector<size_t> > > mGrid;
 
+    /// key：他のKF。
+    /// value: キーのKFと自身が共有するMapPointの数。
+    /// valueが小さい(15以下)のものについては実際には接続されていないと思われる。
     std::map<KeyFrame*, int> mConnectedKeyFrameWeights;
+    /// 接続されたKF群について共有するMapPointが多い順にソートされたKF群。
+    /// mvOrderedWeightsと対応が取られている。
     std::vector<KeyFrame*> mvpOrderedConnectedKeyFrames;
+    /// 接続されたKF群について共有するMapPointが多い順にソートされた共有数。
+    /// mvpOrderedConnectedKeyFramesと対応が取られている。
     std::vector<int> mvOrderedWeights;
     // For save relation without pointer, this is necessary for save/load
     // function
