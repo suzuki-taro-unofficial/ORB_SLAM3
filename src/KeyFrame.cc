@@ -449,6 +449,15 @@ MapPoint *KeyFrame::GetMapPoint(const size_t &idx) {
     return mvpMapPoints[idx];
 }
 
+/**
+ * -
+ * 自身が持つ全てのマップポイントについて、それを観測するキーフレームを取得する。
+ * - 共有するマップポイントが閾値(15)より多いキーフレームと自身を接続する。
+ * -
+ * 閾値を超えるキーフレームがない場合、共有している点が最も多いキーフレームと接続する。
+ * `mConnectedKeyFrameeWeights`, `mvpOrderedConnectedKeyFrames`,
+ * `mvOrderedWeights`が更新される
+ */
 void KeyFrame::UpdateConnections(bool upParent) {
     map<KeyFrame *, int> KFcounter;
 
