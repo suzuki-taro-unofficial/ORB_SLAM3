@@ -195,16 +195,27 @@ KeyFrame* MapPoint::GetReferenceKeyFrame() {
     return mpRefKF;
 }
 
+/**
+ * 観測情報の追加
+ * - 既存の観測情報を確認
+ * - 左右のカメラどちらなのか確認し対応する観測情報を更新
+ * - 観測数nObsをインクリメント
+ */
 void MapPoint::AddObservation(KeyFrame* pKF, int idx) {
     unique_lock<mutex> lock(mMutexFeatures);
     tuple<int, int> indexes;
 
+    // 既存の観測情報の確認
     if (mObservations.count(pKF)) {
         indexes = mObservations[pKF];
     } else {
+        // なければ左カメラ右カメラ両方-1で初期化
         indexes = tuple<int, int>(-1, -1);
     }
 
+    /*
+     * 左右のカメラどちらなのか確認し対応する観測情報を更新
+     */
     if (pKF->NLeft != -1 && idx >= pKF->NLeft) {
         get<1>(indexes) = idx;
     } else {

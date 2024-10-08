@@ -162,6 +162,7 @@ public:
     static long unsigned int nNextId;
     long int mnFirstKFid;
     long int mnFirstFrame;
+    /// このMapPointを観測したKF（正しくはカメラ？）の数
     int nObs;
 
     // Variables used by the tracking
