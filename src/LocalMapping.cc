@@ -1332,23 +1332,9 @@ void LocalMapping::ScaleRefinement() {
     // unique_lock<mutex> lock0(mMutexImuInit);
     if (mbResetRequested) return;
 
-    // Retrieve all keyframes in temporal order
-    // list<KeyFrame*> lpKF;
-    // KeyFrame* pKF = mpCurrentKeyFrame;
-    // while (pKF->mPrevKF) {
-    //     lpKF.push_front(pKF);
-    //     pKF = pKF->mPrevKF;
-    // }
-    // lpKF.push_front(pKF);
-    // vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
-
     while (CheckNewKeyFrames()) {
         ProcessNewKeyFrame();
-        // vpKF.push_back(mpCurrentKeyFrame);
-        // lpKF.push_back(mpCurrentKeyFrame);
     }
-
-    // const int N = vpKF.size();
 
     mRwg = Eigen::Matrix3d::Identity();
     mScale = 1.0;
