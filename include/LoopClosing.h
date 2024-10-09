@@ -233,6 +233,7 @@ protected:
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;
 
+    // TODO: これはboolではなくintなのではないのか?
     bool mnFullBAIdx;
 
     vector<double> vdPR_CurrentTime;
