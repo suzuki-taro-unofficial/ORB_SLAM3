@@ -844,13 +844,15 @@ int LoopClosing::FindMatchesByProjection(
     set<MapPoint*>& spMatchedMPinOrigin, vector<MapPoint*>& vpMapPoints,
     vector<MapPoint*>& vpMatchedMapPoints) {
     int nNumCovisibles = 10;
+    // pMatchedKFwに接続されているKFの共通MapPointが多い順に10個vectorに挿入。
     vector<KeyFrame*> vpCovKFm =
         pMatchedKFw->GetBestCovisibilityKeyFrames(nNumCovisibles);
     int nInitialCov = vpCovKFm.size();
-    vpCovKFm.push_back(pMatchedKFw);
+    vpCovKFm.push_back(pMatchedKFw);  //末尾にpMatchedKFw自身も追加
     set<KeyFrame*> spCheckKFs(vpCovKFm.begin(), vpCovKFm.end());
     set<KeyFrame*> spCurrentCovisbles = pCurrentKF->GetConnectedKeyFrames();
     if (nInitialCov < nNumCovisibles) {
+        // 共通MapPointが多いキーフレームそれぞれに対して共視フレームをみつけ、それをvectorに挿入
         for (int i = 0; i < nInitialCov; ++i) {
             vector<KeyFrame*> vpKFs =
                 vpCovKFm[i]->GetBestCovisibilityKeyFrames(nNumCovisibles);
@@ -868,6 +870,7 @@ int LoopClosing::FindMatchesByProjection(
             vpCovKFm.insert(vpCovKFm.end(), vpKFs.begin(), vpKFs.end());
         }
     }
+    // MapPointの集計
     set<MapPoint*> spMapPoints;
     vpMapPoints.clear();
     vpMatchedMapPoints.clear();
@@ -882,14 +885,18 @@ int LoopClosing::FindMatchesByProjection(
         }
     }
 
+    // Sim3変換の適用
+    //与えられたSim3変換を使って、2つのキーフレーム間の位置関係を調整
     Sophus::Sim3f mScw = Converter::toSophus(g2oScw);
     ORBmatcher matcher(0.9, true);
 
     vpMatchedMapPoints.resize(pCurrentKF->GetMapPointMatches().size(),
                               static_cast<MapPoint*>(NULL));
+    // 3D座標を2D点に投影し、視点変換後も一致するMapPointを見つける。
     int num_matches = matcher.SearchByProjection(pCurrentKF, mScw, vpMapPoints,
                                                  vpMatchedMapPoints, 3, 1.5);
 
+    //見つけたmappointの数を返す。
     return num_matches;
 }
 
