@@ -2141,6 +2141,7 @@ void Optimizer::OptimizeEssentialGraph(KeyFrame* pCurKF,
     }
 }
 
+/// 2つのキーフレーム間のSim3変換を最適化し、対応するマップポイントを使って、その二つのキーフレーム間の位置関係を推定する処理。結果として最適化された変換と有効な対応点の数を返す。
 int Optimizer::OptimizeSim3(KeyFrame* pKF1, KeyFrame* pKF2,
                             vector<MapPoint*>& vpMatches1, g2o::Sim3& g2oS12,
                             const float th2, const bool bFixScale,
