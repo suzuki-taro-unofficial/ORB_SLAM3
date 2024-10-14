@@ -93,3 +93,5 @@ borrar/*
 */ExecMean.txt
 
 .vscode/
+
+/.cache
