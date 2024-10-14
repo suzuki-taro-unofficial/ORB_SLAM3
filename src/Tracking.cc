@@ -1391,6 +1391,7 @@ void Tracking::Track() {
     }
 
     if (mState == NOT_INITIALIZED) {
+        // 何かしらの初期化を行う
         if (mSensor == System::STEREO || mSensor == System::RGBD ||
             mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
             StereoInitialization();
@@ -1418,12 +1419,20 @@ void Tracking::Track() {
             // Local Mapping is activated. This is the normal behaviour, unless
             // you explicitly activate the "only tracking" mode.
             if (mState == OK) {
+                // Checkと言っているのに中身はmLastFrameのmvpMapPointsに変更を加えているのなーぜなーぜ？
+                // MapPointはReplaceによって変更されるらしいので、mLastFrameのmvpMapPointsを
+                // 置換されたものに更新している。
+                //
                 // Local Mapping might have changed some MapPoints tracked in
                 // last frame
                 CheckReplacedInLastFrame();
 
+                // TrackReferenceKeyFrameとTrackWithMotionModelはそのフレームに付随する
+                // MapPointsを計算している？
                 if ((!mbVelocity && !pCurrentMap->isImuInitialized()) ||
                     mCurrentFrame.mnId < mnLastRelocFrameId + 2) {
+                    // IMUが使えないか（mbVelocityが何を示しているかがわからないので予測）
+                    // Relocalizationから時間が空いていないときに実行される
                     Verbose::PrintMess(
                         "TRACK: Track with respect to the reference KF ",
                         Verbose::VERBOSITY_DEBUG);
@@ -1435,6 +1444,8 @@ void Tracking::Track() {
                     if (!bOK) bOK = TrackReferenceKeyFrame();
                 }
 
+                // Trackできなかったら状態をLOSTかRECENTLY_LOSTにする。
+                // 後の処理に影響している。
                 if (!bOK) {
                     if (mCurrentFrame.mnId <=
                             (mnLastRelocFrameId + mnFramesToResetIMU) &&

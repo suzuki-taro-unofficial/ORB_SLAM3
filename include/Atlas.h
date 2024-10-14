@@ -143,6 +143,11 @@ public:
 protected:
     std::set<Map*> mspMaps;
     std::set<Map*> mspBadMaps;
+
+    // おそらくboost::archive::binary_iarchiveでAtlasをバイナリに変換する際に
+    // std::setをうまく変換できない可能性があるからstd::vectorにPreSaveで変換している
+    // PostLoadでそれを使ってるからおそらく正しい
+    //
     // Its necessary change the container from set to vector because
     // libboost 1.58 and Ubuntu 16.04 have an error with this cointainer
     std::vector<Map*> mvpBackupMaps;
