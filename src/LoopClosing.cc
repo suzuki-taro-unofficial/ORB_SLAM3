@@ -269,17 +269,20 @@ void LoopClosing::Run() {
     SetFinish();
 }
 
+/// ループキューに対してロック、キーフレームに副作用
 void LoopClosing::InsertKeyFrame(KeyFrame* pKF) {
     unique_lock<mutex> lock(mMutexLoopQueue);
     if (pKF->mnId != 0) mlpLoopKeyFrameQueue.push_back(pKF);
 }
 
+/// ループキューに対してロック、キーフレームに副作用
 bool LoopClosing::CheckNewKeyFrames() {
     unique_lock<mutex> lock(mMutexLoopQueue);
     return (!mlpLoopKeyFrameQueue.empty());
 }
 
 /**
+ * ループキューに対してロック、キーフレームに副作用。
  *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
  *検出できたらtrueを返す。
  */
@@ -901,6 +904,7 @@ int LoopClosing::FindMatchesByProjection(
 }
 
 /**
+ * GBAに対しロック、GBAで副作用
  *キーフレームやマップポイントの補正、グローバルバンドル調整を行う関数。
  */
 void LoopClosing::CorrectLoop() {
@@ -1126,6 +1130,7 @@ void LoopClosing::CorrectLoop() {
             ->mnId;  // TODO old varible, it is not use in the new algorithm
 }
 
+/// GBAに対してロック、mapupdateに対してロック
 /// IMUを使用していない場合のマージ処理
 void LoopClosing::MergeLocal() {
     int numTemporalKFs =
@@ -1144,6 +1149,7 @@ void LoopClosing::MergeLocal() {
     bool bRelaunchBA = false;
 
     //  If a Global Bundle Adjustment is running, abort it
+    //  GBAを行っているなら停止させる
     if (isRunningGBA()) {
         unique_lock<mutex> lock(mMutexGBA);
         mbStopGBA = true;
@@ -1157,22 +1163,26 @@ void LoopClosing::MergeLocal() {
         bRelaunchBA = true;
     }
 
+    //ローカルマッピングも停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
         usleep(1000);
     }
 
+    // ローカルマッピングにまだNewKFが残っているなら、それらからマップポイントの更新やキーフレームの関連付けなど行っておく。
     mpLocalMapper->EmptyQueue();
 
     // Merge map will become in the new active map with the local window of KFs
     // and MPs from the current map. Later, the elements of the current map will
     // be transform to the new active map reference, in order to keep real time
     // tracking
+    // マージする二つのマップをKFから取り出す。
     Map* pCurrentMap = mpCurrentKF->GetMap();
     Map* pMergeMap = mpMergeMatchedKF->GetMap();
 
     // Ensure current keyframe is updated
+    // 現在のキーフレームに対し、同じMPを持っているKFと接続する。
     mpCurrentKF->UpdateConnections();
 
     // Get the current KF and its neighbors(visual->covisibles;
@@ -1180,6 +1190,8 @@ void LoopClosing::MergeLocal() {
     set<KeyFrame*> spLocalWindowKFs;
     // Get MPs in the welding area from the current map
     set<MapPoint*> spLocalWindowMPs;
+    // IMU使用してないときのマージ処理なのに、慣性データ確認してる？
+    // GPT曰く、途中でセンサーが変わって、今のキーフレームではIMU使用してなくても、過去のデータにはIMUが使用されている可能性があり、適切なマージ処理をするため
     if (pCurrentMap->IsInertial() &&
         pMergeMap->IsInertial())  // TODO Check the correct initialization
     {
@@ -1633,6 +1645,7 @@ void LoopClosing::MergeLocal() {
     mpAtlas->RemoveBadMaps();
 }
 
+/// GBAおよびmapupdateに対してロック
 /// IMUを使用している場合のマージ処理
 void LoopClosing::MergeLocal2() {
     // cout << "Merge detected!!!!" << endl;
@@ -1885,6 +1898,7 @@ void LoopClosing::CheckObservations(set<KeyFrame*>& spKFsMap1,
     cout << "----------------------" << endl;
 }
 
+/// mapUpdateに対してロック
 void LoopClosing::SearchAndFuse(const KeyFrameAndPose& CorrectedPosesMap,
                                 vector<MapPoint*>& vpMapPoints) {
     ORBmatcher matcher(0.8);
@@ -1951,6 +1965,7 @@ void LoopClosing::SearchAndFuse(const vector<KeyFrame*>& vConectedKFs,
     }
 }
 
+/// resetに対してロック
 void LoopClosing::RequestReset() {
     {
         unique_lock<mutex> lock(mMutexReset);
@@ -1966,6 +1981,7 @@ void LoopClosing::RequestReset() {
     }
 }
 
+/// resetに対してロック
 void LoopClosing::RequestResetActiveMap(Map* pMap) {
     {
         unique_lock<mutex> lock(mMutexReset);
@@ -1982,6 +1998,7 @@ void LoopClosing::RequestResetActiveMap(Map* pMap) {
     }
 }
 
+/// Resetに対してロック
 void LoopClosing::ResetIfRequested() {
     unique_lock<mutex> lock(mMutexReset);
     if (mbResetRequested) {
@@ -2008,6 +2025,7 @@ void LoopClosing::ResetIfRequested() {
     }
 }
 
+/// GBAに対してロック
 void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
                                             unsigned long nLoopKF) {
     Verbose::PrintMess("Starting Global Bundle Adjustment",
@@ -2145,21 +2163,25 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
     }
 }
 
+/// finishにロック
 void LoopClosing::RequestFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     mbFinishRequested = true;
 }
 
+/// finishにロック
 bool LoopClosing::CheckFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinishRequested;
 }
 
+/// finishにロック
 void LoopClosing::SetFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     mbFinished = true;
 }
 
+/// finishにロック
 bool LoopClosing::isFinished() {
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinished;
