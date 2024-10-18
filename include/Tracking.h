@@ -355,8 +355,9 @@ public:
     cv::Mat mImRight;
 
 private:
+    // For Track()
     bool CreateMapThenAbortByTimeStamp(Map* pCurrentMap);
-    bool TrackFrameIfSystemInitialized(Map* pCurrentMap);
+    bool TrackFrame(Map* pCurrentMap);
     bool TrackFrameIfLocalMappingAvailable(Map* pCurrentMap);
     bool RecoverFromRecentlyLost(Map* pCurrentMap);
     void RecoverFromLost(Map* pCurrentMap);

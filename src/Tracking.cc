@@ -1539,7 +1539,7 @@ void Tracking::UpdateParametersAndCreateKeyFrame(bool bOK) {
     }
 }
 
-bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
+bool Tracking::TrackFrame(Map *pCurrentMap) {
     // System is initialized. Track Frame.
     bool bOK;
 
@@ -1754,7 +1754,7 @@ void Tracking::Track() {
             mnFirstFrameId = mCurrentFrame.mnId;
         }
     } else {
-        if (TrackFrameIfSystemInitialized(pCurrentMap)) return;
+        if (TrackFrame(pCurrentMap)) return;
     }
 
     if (mState == OK || mState == RECENTLY_LOST) {
