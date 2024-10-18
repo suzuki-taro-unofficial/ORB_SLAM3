@@ -352,6 +352,10 @@ protected:
 
 public:
     cv::Mat mImRight;
+
+private:
+    bool CreateMapThenAbortByTimeStamp(Map* pCurrentMap);
+    bool TrackFrameIfSystemInitialized(Map* pCurrentMap);
 };
 
 }  // namespace ORB_SLAM3
