@@ -361,6 +361,7 @@ private:
     bool RecoverFromRecentlyLost(Map* pCurrentMap);
     void RecoverFromLost(Map* pCurrentMap);
     bool TrackFrameIfLocalMappingNotAvailable();
+    void UpdateParametersAndCreateKeyFrame(bool bOK);
 };
 
 }  // namespace ORB_SLAM3

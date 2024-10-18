@@ -1485,6 +1485,60 @@ bool Tracking::TrackFrameIfLocalMappingNotAvailable() {
     return bOK;
 }
 
+void Tracking::UpdateParametersAndCreateKeyFrame(bool bOK) {
+    // Update motion model
+    if (mLastFrame.isSet() && mCurrentFrame.isSet()) {
+        Sophus::SE3f LastTwc = mLastFrame.GetPose().inverse();
+        mVelocity = mCurrentFrame.GetPose() * LastTwc;
+        mbVelocity = true;
+    } else {
+        mbVelocity = false;
+    }
+
+    if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
+        mSensor == System::IMU_RGBD)
+        mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
+
+    // Clean VO matches
+    for (int i = 0; i < mCurrentFrame.N; i++) {
+        MapPoint *pMP = mCurrentFrame.mvpMapPoints[i];
+        if (pMP)
+            if (pMP->Observations() < 1) {
+                mCurrentFrame.mvbOutlier[i] = false;
+                mCurrentFrame.mvpMapPoints[i] = static_cast<MapPoint *>(NULL);
+            }
+    }
+
+    // Delete temporal MapPoints
+    for (list<MapPoint *>::iterator lit = mlpTemporalPoints.begin(),
+                                    lend = mlpTemporalPoints.end();
+         lit != lend; lit++) {
+        MapPoint *pMP = *lit;
+        delete pMP;
+    }
+    mlpTemporalPoints.clear();
+
+    bool bNeedKF = NeedNewKeyFrame();
+
+    // Check if we need to insert a new keyframe
+    if (bNeedKF && (bOK || (mInsertKFsLost && mState == RECENTLY_LOST &&
+                            (mSensor == System::IMU_MONOCULAR ||
+                             mSensor == System::IMU_STEREO ||
+                             mSensor == System::IMU_RGBD))))
+        CreateNewKeyFrame();
+
+    // We allow points with high innovation (considererd outliers by the
+    // Huber Function) pass to the new keyframe, so that bundle
+    // adjustment will finally decide if they are outliers or not. We
+    // don't want next frame to estimate its position with those points
+    // so we discard them in the frame. Only has effect if lastframe is
+    // tracked
+    for (int i = 0; i < mCurrentFrame.N; i++) {
+        if (mCurrentFrame.mvpMapPoints[i] && mCurrentFrame.mvbOutlier[i])
+            mCurrentFrame.mvpMapPoints[i] = static_cast<MapPoint *>(NULL);
+    }
+}
+
 bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
     // System is initialized. Track Frame.
     bool bOK;
@@ -1538,6 +1592,7 @@ bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
         if (bOK && !mbVO) bOK = TrackLocalMap();
     }
 
+    // Trackが失敗したら状態を変更して場合によってはActiveMapをリセットする
     if (bOK)
         mState = OK;
     else if (mState == OK) {
@@ -1596,58 +1651,7 @@ bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
         mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
 
     if (bOK || mState == RECENTLY_LOST) {
-        // Update motion model
-        if (mLastFrame.isSet() && mCurrentFrame.isSet()) {
-            Sophus::SE3f LastTwc = mLastFrame.GetPose().inverse();
-            mVelocity = mCurrentFrame.GetPose() * LastTwc;
-            mbVelocity = true;
-        } else {
-            mbVelocity = false;
-        }
-
-        if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
-            mSensor == System::IMU_RGBD)
-            mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
-
-        // Clean VO matches
-        for (int i = 0; i < mCurrentFrame.N; i++) {
-            MapPoint *pMP = mCurrentFrame.mvpMapPoints[i];
-            if (pMP)
-                if (pMP->Observations() < 1) {
-                    mCurrentFrame.mvbOutlier[i] = false;
-                    mCurrentFrame.mvpMapPoints[i] =
-                        static_cast<MapPoint *>(NULL);
-                }
-        }
-
-        // Delete temporal MapPoints
-        for (list<MapPoint *>::iterator lit = mlpTemporalPoints.begin(),
-                                        lend = mlpTemporalPoints.end();
-             lit != lend; lit++) {
-            MapPoint *pMP = *lit;
-            delete pMP;
-        }
-        mlpTemporalPoints.clear();
-
-        bool bNeedKF = NeedNewKeyFrame();
-
-        // Check if we need to insert a new keyframe
-        if (bNeedKF && (bOK || (mInsertKFsLost && mState == RECENTLY_LOST &&
-                                (mSensor == System::IMU_MONOCULAR ||
-                                 mSensor == System::IMU_STEREO ||
-                                 mSensor == System::IMU_RGBD))))
-            CreateNewKeyFrame();
-
-        // We allow points with high innovation (considererd outliers by the
-        // Huber Function) pass to the new keyframe, so that bundle
-        // adjustment will finally decide if they are outliers or not. We
-        // don't want next frame to estimate its position with those points
-        // so we discard them in the frame. Only has effect if lastframe is
-        // tracked
-        for (int i = 0; i < mCurrentFrame.N; i++) {
-            if (mCurrentFrame.mvpMapPoints[i] && mCurrentFrame.mvbOutlier[i])
-                mCurrentFrame.mvpMapPoints[i] = static_cast<MapPoint *>(NULL);
-        }
+        UpdateParametersAndCreateKeyFrame(bOK);
     }
 
     // Reset if the camera get lost soon after initialization
