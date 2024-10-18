@@ -70,6 +70,10 @@ void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser) {
 
 void LocalMapping::SetTracker(Tracking* pTracker) { mpTracker = pTracker; }
 
+float LocalMapping::DistanceOfKeyFrames(KeyFrame& kf1, KeyFrame& kf2) {
+    return (kf1.GetCameraCenter() - kf2.GetCameraCenter()).norm();
+}
+
 void LocalMapping::Run() {
     mbFinished = false;
 
@@ -110,17 +114,12 @@ void LocalMapping::Run() {
                     // 動作を行う。
                     if (mbInertial &&
                         mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
-                        // 二世代前のキーフレームが持つカメラの情報から移動距離を算出
                         float dist =
-                            // 今回のKFから前回のKFまでの距離
-                            (mpCurrentKeyFrame->mPrevKF->GetCameraCenter() -
-                             mpCurrentKeyFrame->GetCameraCenter())
-                                .norm() +
-                            // 前回のKFから前々回のKFまでの距離
-                            (mpCurrentKeyFrame->mPrevKF->mPrevKF
-                                 ->GetCameraCenter() -
-                             mpCurrentKeyFrame->mPrevKF->GetCameraCenter())
-                                .norm();
+                            DistanceOfKeyFrames(*mpCurrentKeyFrame,
+                                                *mpCurrentKeyFrame->mPrevKF) +
+                            DistanceOfKeyFrames(
+                                *mpCurrentKeyFrame->mPrevKF,
+                                *mpCurrentKeyFrame->mPrevKF->mPrevKF);
 
                         if (dist > 0.05)
                             mTinit += mpCurrentKeyFrame->mTimeStamp -
