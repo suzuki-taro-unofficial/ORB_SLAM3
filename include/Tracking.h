@@ -356,6 +356,10 @@ public:
 private:
     bool CreateMapThenAbortByTimeStamp(Map* pCurrentMap);
     bool TrackFrameIfSystemInitialized(Map* pCurrentMap);
+    bool TrackFrameIfLocalMappingAvailable(Map* pCurrentMap);
+    bool RecoverFromRecentlyLost(Map* pCurrentMap);
+    void RecoverFromLost(Map* pCurrentMap);
+    bool TrackFrameIfLocalMappingNotAvailable();
 };
 
 }  // namespace ORB_SLAM3

@@ -1342,6 +1342,149 @@ bool Tracking::CreateMapThenAbortByTimeStamp(Map *pCurrentMap) {
     return false;
 }
 
+bool Tracking::TrackFrameIfLocalMappingAvailable(Map *pCurrentMap) {
+    bool bOK = false;
+
+    // Checkと言っているのに中身はmLastFrameのmvpMapPointsに変更を加えているのなーぜなーぜ？
+    // MapPointはReplaceによって変更されるらしいので、mLastFrameのmvpMapPointsを
+    // 置換されたものに更新している。
+    //
+    // Local Mapping might have changed some MapPoints tracked in
+    // last frame
+    CheckReplacedInLastFrame();
+
+    // TrackReferenceKeyFrameとTrackWithMotionModelはそのフレームに付随する
+    // MapPointsを計算している？
+    if ((!mbVelocity && !pCurrentMap->isImuInitialized()) ||
+        mCurrentFrame.mnId < mnLastRelocFrameId + 2) {
+        // IMUが使えないか（mbVelocityが何を示しているかがわからないので予測）
+        // Relocalizationから時間が空いていないときに実行される
+        Verbose::PrintMess("TRACK: Track with respect to the reference KF ",
+                           Verbose::VERBOSITY_DEBUG);
+        bOK = TrackReferenceKeyFrame();
+    } else {
+        Verbose::PrintMess("TRACK: Track with motion model",
+                           Verbose::VERBOSITY_DEBUG);
+        bOK = TrackWithMotionModel();
+        if (!bOK) bOK = TrackReferenceKeyFrame();
+    }
+
+    // Trackできなかったら状態をLOSTかRECENTLY_LOSTにする。
+    // 後の処理に影響している。
+    if (!bOK) {
+        if (mCurrentFrame.mnId <= (mnLastRelocFrameId + mnFramesToResetIMU) &&
+            (mSensor == System::IMU_MONOCULAR ||
+             mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD)) {
+            mState = LOST;
+        } else if (pCurrentMap->KeyFramesInMap() > 10) {
+            // cout << "KF in map: " <<
+            // pCurrentMap->KeyFramesInMap() << endl;
+            mState = RECENTLY_LOST;
+            mTimeStampLost = mCurrentFrame.mTimeStamp;
+        } else {
+            mState = LOST;
+        }
+    }
+
+    return bOK;
+}
+
+bool Tracking::RecoverFromRecentlyLost(Map *pCurrentMap) {
+    Verbose::PrintMess("Lost for a short time", Verbose::VERBOSITY_NORMAL);
+
+    bool bOK = true;
+    if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
+         mSensor == System::IMU_RGBD)) {
+        if (pCurrentMap->isImuInitialized())
+            PredictStateIMU();
+        else
+            bOK = false;
+
+        if (mCurrentFrame.mTimeStamp - mTimeStampLost > time_recently_lost) {
+            mState = LOST;
+            Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
+            bOK = false;
+        }
+    } else {
+        // Relocalization
+        bOK = Relocalization();
+        if (mCurrentFrame.mTimeStamp - mTimeStampLost > 3.0f && !bOK) {
+            mState = LOST;
+            Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
+            bOK = false;
+        }
+    }
+
+    return bOK;
+}
+
+void Tracking::RecoverFromLost(Map *pCurrentMap) {
+    Verbose::PrintMess("A new map is started...", Verbose::VERBOSITY_NORMAL);
+
+    if (pCurrentMap->KeyFramesInMap() < 10) {
+        mpSystem->ResetActiveMap();
+        Verbose::PrintMess("Reseting current map...",
+                           Verbose::VERBOSITY_NORMAL);
+    } else
+        CreateMapInAtlas();
+
+    if (mpLastKeyFrame) mpLastKeyFrame = static_cast<KeyFrame *>(NULL);
+
+    Verbose::PrintMess("done", Verbose::VERBOSITY_NORMAL);
+}
+
+bool Tracking::TrackFrameIfLocalMappingNotAvailable() {
+    bool bOK = false;
+    if (!mbVO) {
+        // In last frame we tracked enough MapPoints in the map
+        if (mbVelocity) {
+            bOK = TrackWithMotionModel();
+        } else {
+            bOK = TrackReferenceKeyFrame();
+        }
+    } else {
+        // In last frame we tracked mainly "visual odometry" points.
+
+        // We compute two camera poses, one from motion model and
+        // one doing relocalization. If relocalization is sucessfull
+        // we choose that solution, otherwise we retain the "visual
+        // odometry" solution.
+
+        bool bOKMM = false;
+        bool bOKReloc = false;
+        vector<MapPoint *> vpMPsMM;
+        vector<bool> vbOutMM;
+        Sophus::SE3f TcwMM;
+        if (mbVelocity) {
+            bOKMM = TrackWithMotionModel();
+            vpMPsMM = mCurrentFrame.mvpMapPoints;
+            vbOutMM = mCurrentFrame.mvbOutlier;
+            TcwMM = mCurrentFrame.GetPose();
+        }
+        bOKReloc = Relocalization();
+
+        if (bOKMM && !bOKReloc) {
+            mCurrentFrame.SetPose(TcwMM);
+            mCurrentFrame.mvpMapPoints = vpMPsMM;
+            mCurrentFrame.mvbOutlier = vbOutMM;
+
+            if (mbVO) {
+                for (int i = 0; i < mCurrentFrame.N; i++) {
+                    if (mCurrentFrame.mvpMapPoints[i] &&
+                        !mCurrentFrame.mvbOutlier[i]) {
+                        mCurrentFrame.mvpMapPoints[i]->IncreaseFound();
+                    }
+                }
+            }
+        } else if (bOKReloc) {
+            mbVO = false;
+        }
+
+        bOK = bOKReloc || bOKMM;
+    }
+    return bOK;
+}
+
 bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
     // System is initialized. Track Frame.
     bool bOK;
@@ -1353,97 +1496,12 @@ bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
         // Local Mapping is activated. This is the normal behaviour, unless
         // you explicitly activate the "only tracking" mode.
         if (mState == OK) {
-            // Checkと言っているのに中身はmLastFrameのmvpMapPointsに変更を加えているのなーぜなーぜ？
-            // MapPointはReplaceによって変更されるらしいので、mLastFrameのmvpMapPointsを
-            // 置換されたものに更新している。
-            //
-            // Local Mapping might have changed some MapPoints tracked in
-            // last frame
-            CheckReplacedInLastFrame();
-
-            // TrackReferenceKeyFrameとTrackWithMotionModelはそのフレームに付随する
-            // MapPointsを計算している？
-            if ((!mbVelocity && !pCurrentMap->isImuInitialized()) ||
-                mCurrentFrame.mnId < mnLastRelocFrameId + 2) {
-                // IMUが使えないか（mbVelocityが何を示しているかがわからないので予測）
-                // Relocalizationから時間が空いていないときに実行される
-                Verbose::PrintMess(
-                    "TRACK: Track with respect to the reference KF ",
-                    Verbose::VERBOSITY_DEBUG);
-                bOK = TrackReferenceKeyFrame();
-            } else {
-                Verbose::PrintMess("TRACK: Track with motion model",
-                                   Verbose::VERBOSITY_DEBUG);
-                bOK = TrackWithMotionModel();
-                if (!bOK) bOK = TrackReferenceKeyFrame();
-            }
-
-            // Trackできなかったら状態をLOSTかRECENTLY_LOSTにする。
-            // 後の処理に影響している。
-            if (!bOK) {
-                if (mCurrentFrame.mnId <=
-                        (mnLastRelocFrameId + mnFramesToResetIMU) &&
-                    (mSensor == System::IMU_MONOCULAR ||
-                     mSensor == System::IMU_STEREO ||
-                     mSensor == System::IMU_RGBD)) {
-                    mState = LOST;
-                } else if (pCurrentMap->KeyFramesInMap() > 10) {
-                    // cout << "KF in map: " <<
-                    // pCurrentMap->KeyFramesInMap() << endl;
-                    mState = RECENTLY_LOST;
-                    mTimeStampLost = mCurrentFrame.mTimeStamp;
-                } else {
-                    mState = LOST;
-                }
-            }
+            bOK = TrackFrameIfLocalMappingAvailable(pCurrentMap);
         } else {
             if (mState == RECENTLY_LOST) {
-                Verbose::PrintMess("Lost for a short time",
-                                   Verbose::VERBOSITY_NORMAL);
-
-                bOK = true;
-                if ((mSensor == System::IMU_MONOCULAR ||
-                     mSensor == System::IMU_STEREO ||
-                     mSensor == System::IMU_RGBD)) {
-                    if (pCurrentMap->isImuInitialized())
-                        PredictStateIMU();
-                    else
-                        bOK = false;
-
-                    if (mCurrentFrame.mTimeStamp - mTimeStampLost >
-                        time_recently_lost) {
-                        mState = LOST;
-                        Verbose::PrintMess("Track Lost...",
-                                           Verbose::VERBOSITY_NORMAL);
-                        bOK = false;
-                    }
-                } else {
-                    // Relocalization
-                    bOK = Relocalization();
-                    if (mCurrentFrame.mTimeStamp - mTimeStampLost > 3.0f &&
-                        !bOK) {
-                        mState = LOST;
-                        Verbose::PrintMess("Track Lost...",
-                                           Verbose::VERBOSITY_NORMAL);
-                        bOK = false;
-                    }
-                }
+                bOK = RecoverFromRecentlyLost(pCurrentMap);
             } else if (mState == LOST) {
-                Verbose::PrintMess("A new map is started...",
-                                   Verbose::VERBOSITY_NORMAL);
-
-                if (pCurrentMap->KeyFramesInMap() < 10) {
-                    mpSystem->ResetActiveMap();
-                    Verbose::PrintMess("Reseting current map...",
-                                       Verbose::VERBOSITY_NORMAL);
-                } else
-                    CreateMapInAtlas();
-
-                if (mpLastKeyFrame)
-                    mpLastKeyFrame = static_cast<KeyFrame *>(NULL);
-
-                Verbose::PrintMess("done", Verbose::VERBOSITY_NORMAL);
-
+                RecoverFromLost(pCurrentMap);
                 return true;
             }
         }
@@ -1458,53 +1516,7 @@ bool Tracking::TrackFrameIfSystemInitialized(Map *pCurrentMap) {
                                    Verbose::VERBOSITY_NORMAL);
             bOK = Relocalization();
         } else {
-            if (!mbVO) {
-                // In last frame we tracked enough MapPoints in the map
-                if (mbVelocity) {
-                    bOK = TrackWithMotionModel();
-                } else {
-                    bOK = TrackReferenceKeyFrame();
-                }
-            } else {
-                // In last frame we tracked mainly "visual odometry" points.
-
-                // We compute two camera poses, one from motion model and
-                // one doing relocalization. If relocalization is sucessfull
-                // we choose that solution, otherwise we retain the "visual
-                // odometry" solution.
-
-                bool bOKMM = false;
-                bool bOKReloc = false;
-                vector<MapPoint *> vpMPsMM;
-                vector<bool> vbOutMM;
-                Sophus::SE3f TcwMM;
-                if (mbVelocity) {
-                    bOKMM = TrackWithMotionModel();
-                    vpMPsMM = mCurrentFrame.mvpMapPoints;
-                    vbOutMM = mCurrentFrame.mvbOutlier;
-                    TcwMM = mCurrentFrame.GetPose();
-                }
-                bOKReloc = Relocalization();
-
-                if (bOKMM && !bOKReloc) {
-                    mCurrentFrame.SetPose(TcwMM);
-                    mCurrentFrame.mvpMapPoints = vpMPsMM;
-                    mCurrentFrame.mvbOutlier = vbOutMM;
-
-                    if (mbVO) {
-                        for (int i = 0; i < mCurrentFrame.N; i++) {
-                            if (mCurrentFrame.mvpMapPoints[i] &&
-                                !mCurrentFrame.mvbOutlier[i]) {
-                                mCurrentFrame.mvpMapPoints[i]->IncreaseFound();
-                            }
-                        }
-                    }
-                } else if (bOKReloc) {
-                    mbVO = false;
-                }
-
-                bOK = bOKReloc || bOKMM;
-            }
+            bOK = TrackFrameIfLocalMappingNotAvailable();
         }
     }
 
