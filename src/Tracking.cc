@@ -1351,7 +1351,7 @@ bool Tracking::TrackFrameIfLocalMappingAvailable(Map *pCurrentMap) {
     //
     // Local Mapping might have changed some MapPoints tracked in
     // last frame
-    CheckReplacedInLastFrame();
+    CheckAndUpdateReplacedMapPointsInLastFrame();
 
     // TrackReferenceKeyFrameとTrackWithMotionModelはそのフレームに付随する
     // MapPointsを計算している？
@@ -2164,7 +2164,7 @@ void Tracking::CreateMapInAtlas() {
     mbCreatedMap = true;
 }
 
-void Tracking::CheckReplacedInLastFrame() {
+void Tracking::CheckAndUpdateReplacedMapPointsInLastFrame() {
     for (int i = 0; i < mLastFrame.N; i++) {
         MapPoint *pMP = mLastFrame.mvpMapPoints[i];
 

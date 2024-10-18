@@ -194,7 +194,8 @@ protected:
     // void CreateNewMapPoints();
     void CreateInitialMapMonocular();
 
-    void CheckReplacedInLastFrame();
+    /// old name: CheckReplacedInLastFrame
+    void CheckAndUpdateReplacedMapPointsInLastFrame();
     bool TrackReferenceKeyFrame();
     void UpdateLastFrame();
     bool TrackWithMotionModel();
