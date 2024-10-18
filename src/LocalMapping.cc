@@ -601,8 +601,7 @@ void LocalMapping::SearchInNeighbors() {
     if (mbMonocular) nn = 30;
     const vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
     vector<KeyFrame*> vpTargetKFs;
-    for (vector<KeyFrame*>::const_iterator vit = vpNeighKFs.begin(), vend = vpNeighKFs.end(); vit != vend; vit++) {
-        KeyFrame* pKFi = *vit;
+    for (auto pKFi : vpNeighKFs) {
         if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) continue;
         vpTargetKFs.push_back(pKFi);
         pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
