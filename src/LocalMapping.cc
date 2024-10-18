@@ -595,7 +595,12 @@ void LocalMapping::CreateNewMapPoints() {
     }
 }
 
-void LocalMapping::SearchInNeighbors() {
+/**
+ * CurrentKeyFrameからCovisibilityGraphでつながっているKFなどを取得する。
+ *
+ * SearchInNeighborsから切り出した
+ */
+std::vector<KeyFrame*> LocalMapping::GetNeighbors() {
     // Retrieve neighbor keyframes
     int nn = 10;
     if (mbMonocular) nn = 30;
@@ -634,6 +639,12 @@ void LocalMapping::SearchInNeighbors() {
             pKFi = pKFi->mPrevKF;
         }
     }
+
+    return vpTargetKFs;
+}
+
+void LocalMapping::SearchInNeighbors() {
+    vector<KeyFrame*> vpTargetKFs = GetNeighbors();
 
     // Search matches by projection from current KF in target KFs
     ORBmatcher matcher;
