@@ -612,16 +612,13 @@ void LocalMapping::SearchInNeighbors() {
     // Extend to some second neighbors if abort is not requested
     for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
         const vector<KeyFrame*> vpSecondNeighKFs = vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
-        for (vector<KeyFrame*>::const_iterator vit2 = vpSecondNeighKFs.begin(), vend2 = vpSecondNeighKFs.end();
-             vit2 != vend2; vit2++) {
-            KeyFrame* pKFi2 = *vit2;
+        for (auto pKFi2 : vpSecondNeighKFs) {
             if (pKFi2->isBad() || pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
                 pKFi2->mnId == mpCurrentKeyFrame->mnId)
                 continue;
             vpTargetKFs.push_back(pKFi2);
             pKFi2->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
         }
-
         if (mbAbortBA) break;
     }
 
