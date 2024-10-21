@@ -567,6 +567,9 @@ bool LocalMapping::isFinished() {
     return mbFinished;
 }
 
+/**
+ * - 新しいキーフレームがあれば先に前処理(`ProcessNewKeyFrame`)を行う
+ */
 void LocalMapping::ScaleRefinement() {
     // Minimum number of keyframes to compute a solution
     // Minimum time (seconds) between first and last keyframe to compute a
@@ -581,9 +584,7 @@ void LocalMapping::ScaleRefinement() {
     mRwg = Eigen::Matrix3d::Identity();
     mScale = 1.0;
 
-    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
     Optimizer::InertialOptimization(mpAtlas->GetCurrentMap(), mRwg, mScale);
-    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
     if (mScale < 1e-1)  // 1e-1
     {
@@ -595,21 +596,17 @@ void LocalMapping::ScaleRefinement() {
     Sophus::SO3d so3wg(mRwg);
     // Before this line we are not changing the map
     unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
-    std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
     if ((fabs(mScale - 1.f) > 0.002) || !mbMonocular) {
         Sophus::SE3f Tgw(mRwg.cast<float>().transpose(), Eigen::Vector3f::Zero());
         mpAtlas->GetCurrentMap()->ApplyScaledRotation(Tgw, mScale, true);
         mpTracker->UpdateFrameIMU(mScale, mpCurrentKeyFrame->GetImuBias(), mpCurrentKeyFrame);
     }
-    std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 
     for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(), lend = mlNewKeyFrames.end(); lit != lend; lit++) {
         (*lit)->SetBadFlag();
         delete *lit;
     }
     mlNewKeyFrames.clear();
-
-    double t_inertial_only = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0).count();
 
     // To perform pose-inertial opt w.r.t. last keyframe
     mpCurrentKeyFrame->GetMap()->IncreaseChangeIndex();
