@@ -986,6 +986,18 @@ bool LocalMapping::isFinished() {
     return mbFinished;
 }
 
+vector<KeyFrame*> RetrieveAllKFinTemporalOrder(KeyFrame* kf) {
+    list<KeyFrame*> lpKF;
+    while (kf->mPrevKF) {
+        lpKF.push_front(kf);
+        kf = kf->mPrevKF;
+    }
+    lpKF.push_front(kf);
+    vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
+
+    return vpKF;
+}
+
 /// @brief IMUの初期化し、最適化も施す
 /// @param priorG
 /// @param priorA
@@ -1006,14 +1018,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     if (mpAtlas->KeyFramesInMap() < nMinKF) return;
 
     // Retrieve all keyframe in temporal order
-    list<KeyFrame*> lpKF;
-    KeyFrame* pKF = mpCurrentKeyFrame;
-    while (pKF->mPrevKF) {
-        lpKF.push_front(pKF);
-        pKF = pKF->mPrevKF;
-    }
-    lpKF.push_front(pKF);
-    vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
+    vector<KeyFrame*> vpKF = RetrieveAllKFinTemporalOrder(mpCurrentKeyFrame);
 
     // KFが少なすぎるか、経過時間が短すぎるなら処理をしない
     if (vpKF.size() < nMinKF) return;
@@ -1025,7 +1030,6 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     while (CheckNewKeyFrames()) {
         ProcessNewKeyFrame();
         vpKF.push_back(mpCurrentKeyFrame);
-        lpKF.push_back(mpCurrentKeyFrame);
     }
 
     const int N = vpKF.size();
@@ -1125,7 +1129,6 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     while (CheckNewKeyFrames()) {
         ProcessNewKeyFrame();
         vpKF.push_back(mpCurrentKeyFrame);
-        lpKF.push_back(mpCurrentKeyFrame);
     }
 
     // Correct keyframes starting at map first keyframe
