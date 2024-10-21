@@ -986,6 +986,9 @@ bool LocalMapping::isFinished() {
     return mbFinished;
 }
 
+/**
+ *InitializeIMUから切り出し
+ */
 vector<KeyFrame*> RetrieveAllKFinTemporalOrder(KeyFrame* kf) {
     list<KeyFrame*> lpKF;
     while (kf->mPrevKF) {
