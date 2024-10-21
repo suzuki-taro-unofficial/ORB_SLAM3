@@ -58,6 +58,9 @@ add_library(${PROJECT_NAME} SHARED
 src/System.cc
 src/Tracking.cc
 src/LocalMapping.cc
+src/LocalMapping/CreateNewMapPoints.cc
+src/LocalMapping/KeyFrameCulling.cc
+src/LocalMapping/InitializeIMU.cc
 src/LoopClosing.cc
 src/ORBextractor.cc
 src/ORBmatcher.cc
