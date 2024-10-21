@@ -685,11 +685,9 @@ void LocalMapping::SearchInNeighbors() {
     vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
     for (size_t i = 0, iend = vpMapPointMatches.size(); i < iend; i++) {
         MapPoint* pMP = vpMapPointMatches[i];
-        if (pMP) {
-            if (!pMP->isBad()) {
-                pMP->ComputeDistinctiveDescriptors();
-                pMP->UpdateNormalAndDepth();
-            }
+        if (pMP && !pMP->isBad()) {
+            pMP->ComputeDistinctiveDescriptors();
+            pMP->UpdateNormalAndDepth();
         }
     }
 
