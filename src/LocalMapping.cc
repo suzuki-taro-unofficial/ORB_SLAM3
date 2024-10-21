@@ -651,7 +651,7 @@ void LocalMapping::SearchInNeighbors() {
     vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
     for (auto pKFi : vpTargetKFs) {
         matcher.Fuse(pKFi, vpMapPointMatches);
-        /// matcher,Fuseの第三引数はfloat型なので普通にバグ
+        /// matcher.Fuseの第三引数はfloat型なので普通にバグ
         if (pKFi->NLeft != -1) matcher.Fuse(pKFi, vpMapPointMatches, true);
     }
 
