@@ -662,15 +662,10 @@ void LocalMapping::SearchInNeighbors() {
     vector<MapPoint*> vpFuseCandidates;
     vpFuseCandidates.reserve(vpTargetKFs.size() * vpMapPointMatches.size());
 
-    for (vector<KeyFrame*>::iterator vitKF = vpTargetKFs.begin(), vendKF = vpTargetKFs.end(); vitKF != vendKF;
-         vitKF++) {
-        KeyFrame* pKFi = *vitKF;
-
+    for (auto pKFi : vpTargetKFs) {
         vector<MapPoint*> vpMapPointsKFi = pKFi->GetMapPointMatches();
 
-        for (vector<MapPoint*>::iterator vitMP = vpMapPointsKFi.begin(), vendMP = vpMapPointsKFi.end(); vitMP != vendMP;
-             vitMP++) {
-            MapPoint* pMP = *vitMP;
+        for (auto pMP : vpMapPointsKFi) {
             if (!pMP) continue;
             if (pMP->isBad() || pMP->mnFuseCandidateForKF == mpCurrentKeyFrame->mnId) continue;
             pMP->mnFuseCandidateForKF = mpCurrentKeyFrame->mnId;
