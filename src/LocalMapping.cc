@@ -649,9 +649,7 @@ void LocalMapping::SearchInNeighbors() {
     // Search matches by projection from current KF in target KFs
     ORBmatcher matcher;
     vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
-    for (vector<KeyFrame*>::iterator vit = vpTargetKFs.begin(), vend = vpTargetKFs.end(); vit != vend; vit++) {
-        KeyFrame* pKFi = *vit;
-
+    for (auto pKFi : vpTargetKFs) {
         matcher.Fuse(pKFi, vpMapPointMatches);
         if (pKFi->NLeft != -1) matcher.Fuse(pKFi, vpMapPointMatches, true);
     }
