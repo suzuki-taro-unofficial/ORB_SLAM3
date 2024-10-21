@@ -90,11 +90,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
     mInitTime = mpTracker->mLastFrame.mTimeStamp - vpKF.front()->mTimeStamp;
 
-    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
     Optimizer::InertialOptimization(mpAtlas->GetCurrentMap(), mRwg, mScale, mbg, mba, mbMonocular, infoInertial, false,
                                     false, priorG, priorA);
-
-    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
     if (mScale < 1e-1) {
         cout << "scale too small" << endl;
@@ -126,7 +123,6 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
         mpCurrentKeyFrame->bImu = true;
     }
 
-    std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
     if (bFIBA) {
         if (priorA != 0.f)
             Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId, NULL, true, priorG,
@@ -134,8 +130,6 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
         else
             Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId, NULL, false);
     }
-
-    std::chrono::steady_clock::time_point t5 = std::chrono::steady_clock::now();
 
     Verbose::PrintMess("Global Bundle Adjustment finished\nUpdating map ...", Verbose::VERBOSITY_NORMAL);
 
