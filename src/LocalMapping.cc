@@ -90,7 +90,6 @@ void LocalMapping::RunOnce() {
         SearchInNeighbors();
     }
 
-    bool b_doneLBA = false;
     int num_FixedKF_BA = 0;
     int num_OptKF_BA = 0;
     int num_MPs_BA = 0;
@@ -125,12 +124,10 @@ void LocalMapping::RunOnce() {
                 Optimizer::LocalInertialBA(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
                                            num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
                                            !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
-                b_doneLBA = true;
             } else {
                 // IMUが使えないのでLocalBundleAdjustment
                 Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),
                                                  num_FixedKF_BA, num_OptKF_BA, num_MPs_BA, num_edges_BA);
-                b_doneLBA = true;
             }
         }
 
