@@ -152,6 +152,7 @@ protected:
     void MergeLocal();
     void MergeLocal2();
 
+    void StopGBA();
     void CheckObservations(set<KeyFrame*>& spKFsMap1,
                            set<KeyFrame*>& spKFsMap2);
 

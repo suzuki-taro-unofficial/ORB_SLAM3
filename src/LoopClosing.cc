@@ -914,19 +914,7 @@ void LoopClosing::CorrectLoop() {
     mpLocalMapper->EmptyQueue();  // Proccess keyframes in the queue
 
     // If a Global Bundle Adjustment is running, abort it
-    if (isRunningGBA()) {
-        cout << "Stoping Global Bundle Adjustment...";
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
-
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        cout << "  Done!!" << endl;
-    }
+    StopGBA();
 
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
@@ -1150,18 +1138,7 @@ void LoopClosing::MergeLocal() {
 
     //  If a Global Bundle Adjustment is running, abort it
     //  GBAを行っているなら停止させる
-    if (isRunningGBA()) {
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
-
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        bRelaunchBA = true;
-    }
+    StopGBA();
 
     //ローカルマッピングも停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
@@ -1670,18 +1647,7 @@ void LoopClosing::MergeLocal2() {
 
     // cout << "Check Full Bundle Adjustment" << endl;
     //  If a Global Bundle Adjustment is running, abort it
-    if (isRunningGBA()) {
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
-
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        bRelaunchBA = true;
-    }
+    StopGBA();
 
     // cout << "Request Stop Local Mapping" << endl;
     mpLocalMapper->RequestStop();
@@ -1857,6 +1823,23 @@ void LoopClosing::MergeLocal2() {
     mpLocalMapper->Release();
 
     return;
+}
+
+// Added
+void LoopClosing::StopGBA() {
+    if (isRunningGBA()) {
+        cout << "Stoping Global Bundle Adjustment...";
+        unique_lock<mutex> lock(mMutexGBA);
+        mbStopGBA = true;
+
+        mnFullBAIdx++;
+
+        if (mpThreadGBA) {
+            mpThreadGBA->detach();
+            delete mpThreadGBA;
+        }
+        cout << "  Done!!" << endl;
+    }
 }
 
 void LoopClosing::CheckObservations(set<KeyFrame*>& spKFsMap1,
