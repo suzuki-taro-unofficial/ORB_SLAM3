@@ -21,7 +21,6 @@
 
 #include "LocalMapping.h"
 
-#include <chrono>
 #include <mutex>
 
 #include "GeometricTools.h"
@@ -569,6 +568,7 @@ bool LocalMapping::isFinished() {
 
 /**
  * - 新しいキーフレームがあれば先に前処理(`ProcessNewKeyFrame`)を行う
+ * - IMU最適化？(`InertialOptimization`)をする
  */
 void LocalMapping::ScaleRefinement() {
     // Minimum number of keyframes to compute a solution
