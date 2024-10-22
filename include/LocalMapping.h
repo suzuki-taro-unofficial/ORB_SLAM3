@@ -48,6 +48,8 @@ public:
 
     void SetTracker(Tracking* pTracker);
 
+    /// TODO: Add comment
+    void RunOnce();
     /**
      * 内部でループをしており、以下の動作を行う
      * -
