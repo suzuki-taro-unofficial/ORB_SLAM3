@@ -115,13 +115,7 @@ void LoopClosing::Run() {
                                  << endl;
                             if (mSold_new.scale() < 0.90 ||
                                 mSold_new.scale() > 1.1) {
-                                mpMergeLastCurrentKF->SetErase();
-                                mpMergeMatchedKF->SetErase();
-                                mnMergeNumCoincidences = 0;
-                                mvpMergeMatchedMPs.clear();
-                                mvpMergeMPs.clear();
-                                mnMergeNumNotFound = 0;
-                                mbMergeDetected = false;
+                                ResetMergeVariable();
                                 Verbose::PrintMess(
                                     "scale bad estimated. Abort merging",
                                     Verbose::VERBOSITY_NORMAL);
