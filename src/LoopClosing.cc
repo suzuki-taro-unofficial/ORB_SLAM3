@@ -304,36 +304,13 @@ bool LoopClosing::NewDetectCommonRegions() {
         mpLastMap = mpCurrentKF->GetMap();
     }
 
-    /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
-    if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return false;
-    }
-
-    /// ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
-    if (mpTracker->mSensor == System::STEREO &&
-        mpLastMap->GetAllKeyFrames().size() < 5)  // 12
-    {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return false;
-    }
-
-    /// キーフレームの数が12未満なら処理をスキップする。
-    if (mpLastMap->GetAllKeyFrames().size() < 12) {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return false;
-    }
+    if (CheckSkipCondition()) return false;
 
     // Check the last candidates with geometric validation
     //  Loop candidates
     bool bLoopDetectedInKF = false;
-    bool bCheckSpatial = false;
 
     if (mnLoopNumCoincidences > 0) {
-        bCheckSpatial = true;
         // Find from the last KF candidates
         Sophus::SE3d mTcl =
             (mpCurrentKF->GetPose() * mpLoopLastCurrentKF->GetPoseInverse())
@@ -461,6 +438,34 @@ bool LoopClosing::NewDetectCommonRegions() {
 
     mpCurrentKF->SetErase();
     mpCurrentKF->mbCurrentPlaceRecognition = false;
+
+    return false;
+}
+
+// added
+bool LoopClosing::CheckSkipCondition() {
+    /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
+    if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
+        mpKeyFrameDB->add(mpCurrentKF);
+        mpCurrentKF->SetErase();
+        return true;
+    }
+
+    /// ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
+    if (mpTracker->mSensor == System::STEREO &&
+        mpLastMap->GetAllKeyFrames().size() < 5)  // 12
+    {
+        mpKeyFrameDB->add(mpCurrentKF);
+        mpCurrentKF->SetErase();
+        return true;
+    }
+
+    /// キーフレームの数が12未満なら処理をスキップする。
+    if (mpLastMap->GetAllKeyFrames().size() < 12) {
+        mpKeyFrameDB->add(mpCurrentKF);
+        mpCurrentKF->SetErase();
+        return true;
+    }
 
     return false;
 }

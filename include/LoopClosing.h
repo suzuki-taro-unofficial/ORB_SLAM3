@@ -120,6 +120,7 @@ protected:
 
     // Methods to implement the new place recognition algorithm
     bool NewDetectCommonRegions();
+    bool CheckSkipCondition();  // added
     bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF,
                                         KeyFrame* pMatchedKF, g2o::Sim3& gScw,
                                         int& nNumProjMatches,
