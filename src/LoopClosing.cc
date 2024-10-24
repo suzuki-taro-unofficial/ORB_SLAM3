@@ -1070,13 +1070,11 @@ void LoopClosing::CorrectLoop() {
         !mpCurrentKF->GetMap()->GetIniertialBA2())
         bFixedScale = false;
 
-    // cout << "Optimize essential graph" << endl;
     if (pLoopMap->IsInertial() && pLoopMap->isImuInitialized()) {
         Optimizer::OptimizeEssentialGraph4DoF(pLoopMap, mpLoopMatchedKF,
                                               mpCurrentKF, NonCorrectedSim3,
                                               CorrectedSim3, LoopConnections);
     } else {
-        // cout << "Loop -> Scale correction: " << mg2oLoopScw.scale() << endl;
         Optimizer::OptimizeEssentialGraph(
             pLoopMap, mpLoopMatchedKF, mpCurrentKF, NonCorrectedSim3,
             CorrectedSim3, LoopConnections, bFixedScale);
@@ -1195,7 +1193,6 @@ void LoopClosing::MergeLocal() {
     int nNumTries = 0;
     while (spLocalWindowKFs.size() < numTemporalKFs && nNumTries < nMaxTries) {
         vector<KeyFrame*> vpNewCovKFs;
-        vpNewCovKFs.empty();
         for (KeyFrame* pKFi : spLocalWindowKFs) {
             vector<KeyFrame*> vpKFiCov =
                 pKFi->GetBestCovisibilityKeyFrames(numTemporalKFs / 2);
@@ -1371,7 +1368,6 @@ void LoopClosing::MergeLocal() {
 
         for (KeyFrame* pKFi : spLocalWindowKFs) {
             if (!pKFi || pKFi->isBad()) {
-                // std::cout << "Bad KF in correction" << std::endl;
                 continue;
             }
 
@@ -1465,8 +1461,6 @@ void LoopClosing::MergeLocal() {
         Optimizer::LocalBundleAdjustment(mpCurrentKF, vpLocalCurrentWindowKFs,
                                          vpMergeConnectedKFs, &bStop);
     }
-
-    // std::cout << "[Merge]: Welding bundle adjustment finished" << std::endl;
 
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();
@@ -1625,7 +1619,6 @@ void LoopClosing::MergeLocal2() {
     //  If a Global Bundle Adjustment is running, abort it
     StopGBA();
 
-    // cout << "Request Stop Local Mapping" << endl;
     mpLocalMapper->RequestStop();
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
@@ -1783,7 +1776,6 @@ void LoopClosing::MergeLocal2() {
     // Perform BA
     bool bStopFlag = false;
     KeyFrame* pCurrKF = mpTracker->GetLastKeyFrame();
-    // cout << "start MergeInertialBA" << endl;
     Optimizer::MergeInertialBA(pCurrKF, mpMergeMatchedKF, &bStopFlag,
                                pCurrentMap, CorrectedSim3);
     // Release Local Mapping.
