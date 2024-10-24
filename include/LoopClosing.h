@@ -163,6 +163,9 @@ protected:
     Map* mpMapToReset;
     std::mutex mMutexReset;
 
+    void ResetLoopVariable();
+    void ResetMergeVariable();
+
     bool CheckFinish();
     bool CheckUseIMU();  // added
     void SetFinish();

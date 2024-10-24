@@ -161,103 +161,78 @@ void LoopClosing::Run() {
                     vdPR_MatchedTime.push_back(mpMergeMatchedKF->mTimeStamp);
                     vnPR_TypeRecogn.push_back(1);
 
-                    // Reset all variables
-                    mpMergeLastCurrentKF->SetErase();
-                    mpMergeMatchedKF->SetErase();
-                    mnMergeNumCoincidences = 0;
-                    mvpMergeMatchedMPs.clear();
-                    mvpMergeMPs.clear();
-                    mnMergeNumNotFound = 0;
-                    mbMergeDetected = false;
+                    ResetMergeVariable();
 
                     /// マージした場合、ループの検出はリセットされる。
-                    if (mbLoopDetected) {
-                        // Reset Loop variables
-                        mpLoopLastCurrentKF->SetErase();
-                        mpLoopMatchedKF->SetErase();
-                        mnLoopNumCoincidences = 0;
-                        mvpLoopMatchedMPs.clear();
-                        mvpLoopMPs.clear();
-                        mnLoopNumNotFound = 0;
-                        mbLoopDetected = false;
-                    }
-                }
-
-                /// ループのみが検出された場合の処理。
-                if (mbLoopDetected) {
-                    bool bGoodLoop = true;
-                    vdPR_CurrentTime.push_back(mpCurrentKF->mTimeStamp);
-                    vdPR_MatchedTime.push_back(mpLoopMatchedKF->mTimeStamp);
-                    vnPR_TypeRecogn.push_back(0);
-
-                    Verbose::PrintMess("*Loop detected",
-                                       Verbose::VERBOSITY_QUIET);
-
-                    mg2oLoopScw =
-                        mg2oLoopSlw;  //*mvg2oSim3LoopTcw[nCurrentIndex];
-                    /// IMUを用いてループが良好であるか検証する。
-                    if (mpCurrentKF->GetMap()->IsInertial()) {
-                        Sophus::SE3d Twc =
-                            mpCurrentKF->GetPoseInverse().cast<double>();
-                        g2o::Sim3 g2oTwc(Twc.unit_quaternion(),
-                                         Twc.translation(), 1.0);
-                        g2o::Sim3 g2oSww_new = g2oTwc * mg2oLoopScw;
-
-                        Eigen::Vector3d phi =
-                            LogSO3(g2oSww_new.rotation().toRotationMatrix());
-                        cout << "phi = " << phi.transpose() << endl;
-                        if (fabs(phi(0)) < 0.008f && fabs(phi(1)) < 0.008f &&
-                            fabs(phi(2)) < 0.349f) {
-                            if (mpCurrentKF->GetMap()->IsInertial()) {
-                                // If inertial, force only yaw
-                                if (CheckUseIMU() &&
-                                    mpCurrentKF->GetMap()->GetIniertialBA2()) {
-                                    phi(0) = 0;
-                                    phi(1) = 0;
-                                    g2oSww_new = g2o::Sim3(
-                                        ExpSO3(phi), g2oSww_new.translation(),
-                                        1.0);
-                                    mg2oLoopScw = g2oTwc.inverse() * g2oSww_new;
-                                }
-                            }
-
-                        } else {
-                            cout << "BAD LOOP!!!" << endl;
-                            bGoodLoop = false;
-                        }
-                    }
-
-                    if (bGoodLoop) {
-                        mvpLoopMapPoints = mvpLoopMPs;
-
-                        CorrectLoop();
-
-                        mnNumCorrection += 1;
-                    }
-
-                    // Reset all variables
-                    mpLoopLastCurrentKF->SetErase();
-                    mpLoopMatchedKF->SetErase();
-                    mnLoopNumCoincidences = 0;
-                    mvpLoopMatchedMPs.clear();
-                    mvpLoopMPs.clear();
-                    mnLoopNumNotFound = 0;
-                    mbLoopDetected = false;
+                    if (mbLoopDetected) ResetLoopVariable();
                 }
             }
-            mpLastCurrentKF = mpCurrentKF;
+
+            /// ループのみが検出された場合の処理。
+            if (mbLoopDetected) {
+                bool bGoodLoop = true;
+                vdPR_CurrentTime.push_back(mpCurrentKF->mTimeStamp);
+                vdPR_MatchedTime.push_back(mpLoopMatchedKF->mTimeStamp);
+                vnPR_TypeRecogn.push_back(0);
+
+                Verbose::PrintMess("*Loop detected", Verbose::VERBOSITY_QUIET);
+
+                mg2oLoopScw = mg2oLoopSlw;  //*mvg2oSim3LoopTcw[nCurrentIndex];
+                /// IMUを用いてループが良好であるか検証する。
+                if (mpCurrentKF->GetMap()->IsInertial()) {
+                    Sophus::SE3d Twc =
+                        mpCurrentKF->GetPoseInverse().cast<double>();
+                    g2o::Sim3 g2oTwc(Twc.unit_quaternion(), Twc.translation(),
+                                     1.0);
+                    g2o::Sim3 g2oSww_new = g2oTwc * mg2oLoopScw;
+
+                    Eigen::Vector3d phi =
+                        LogSO3(g2oSww_new.rotation().toRotationMatrix());
+                    cout << "phi = " << phi.transpose() << endl;
+                    if (fabs(phi(0)) < 0.008f && fabs(phi(1)) < 0.008f &&
+                        fabs(phi(2)) < 0.349f) {
+                        if (mpCurrentKF->GetMap()->IsInertial()) {
+                            // If inertial, force only yaw
+                            if (CheckUseIMU() &&
+                                mpCurrentKF->GetMap()->GetIniertialBA2()) {
+                                phi(0) = 0;
+                                phi(1) = 0;
+                                g2oSww_new = g2o::Sim3(
+                                    ExpSO3(phi), g2oSww_new.translation(), 1.0);
+                                mg2oLoopScw = g2oTwc.inverse() * g2oSww_new;
+                            }
+                        }
+
+                    } else {
+                        cout << "BAD LOOP!!!" << endl;
+                        bGoodLoop = false;
+                    }
+                }
+
+                if (bGoodLoop) {
+                    mvpLoopMapPoints = mvpLoopMPs;
+
+                    CorrectLoop();
+
+                    mnNumCorrection += 1;
+                }
+
+                ResetLoopVariable();
+            }
         }
-
-        ResetIfRequested();
-
-        if (CheckFinish()) {
-            break;
-        }
-
-        usleep(5000);
+        mpLastCurrentKF = mpCurrentKF;
     }
 
-    SetFinish();
+    ResetIfRequested();
+
+    if (CheckFinish()) {
+        break;
+    }
+
+    usleep(5000);
+}
+
+SetFinish();
 }
 
 /// ループキューに対してロック、キーフレームに副作用
@@ -2085,6 +2060,26 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
 void LoopClosing::RequestFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     mbFinishRequested = true;
+}
+
+void LoopClosing::ResetLoopVariable() {
+    mpLoopLastCurrentKF->SetErase();
+    mpLoopMatchedKF->SetErase();
+    mnLoopNumCoincidences = 0;
+    mvpLoopMatchedMPs.clear();
+    mvpLoopMPs.clear();
+    mnLoopNumNotFound = 0;
+    mbLoopDetected = false;
+}
+
+void LoopClosing::ResetMergeVariable() {
+    mpMergeLastCurrentKF->SetErase();
+    mpMergeMatchedKF->SetErase();
+    mnMergeNumCoincidences = 0;
+    mvpMergeMatchedMPs.clear();
+    mvpMergeMPs.clear();
+    mnMergeNumNotFound = 0;
+    mbMergeDetected = false;
 }
 
 /// finishにロック
