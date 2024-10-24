@@ -115,45 +115,28 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
     mStrVocabularyFilePath = strVocFile;
 
+    // Load ORB Vocabulary
+    cout << endl
+         << "Loading ORB Vocabulary. This could take a while..." << endl;
+
+    mpVocabulary = new ORBVocabulary();
+    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+    if (!bVocLoad) {
+        cerr << "Wrong path to vocabulary. " << endl;
+        cerr << "Falied to open at: " << strVocFile << endl;
+        exit(-1);
+    }
+    cout << "Vocabulary loaded!" << endl << endl;
+
+    // Create KeyFrame Database
+    mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
+
+    // Create Atlas
     if (mStrLoadAtlasFromFile.empty()) {
-        // Load ORB Vocabulary
-        cout << endl
-             << "Loading ORB Vocabulary. This could take a while..." << endl;
-
-        mpVocabulary = new ORBVocabulary();
-        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
-        if (!bVocLoad) {
-            cerr << "Wrong path to vocabulary. " << endl;
-            cerr << "Falied to open at: " << strVocFile << endl;
-            exit(-1);
-        }
-        cout << "Vocabulary loaded!" << endl << endl;
-
-        // Create KeyFrame Database
-        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
-
         // Create the Atlas
         cout << "Initialization of Atlas from scratch " << endl;
         mpAtlas = new Atlas(0);
     } else {
-        // Load ORB Vocabulary
-        cout << endl
-             << "Loading ORB Vocabulary. This could take a while..." << endl;
-
-        mpVocabulary = new ORBVocabulary();
-        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
-        if (!bVocLoad) {
-            cerr << "Wrong path to vocabulary. " << endl;
-            cerr << "Falied to open at: " << strVocFile << endl;
-            exit(-1);
-        }
-        cout << "Vocabulary loaded!" << endl << endl;
-
-        // Create KeyFrame Database
-        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
-
-        cout << "Load File" << endl;
-
         // Load the file with an earlier session
         cout << "Initialization of Atlas from file: " << mStrLoadAtlasFromFile
              << endl;
@@ -222,8 +205,7 @@ System::System(const string& strVocFile, const string& strSettingsFile,
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
     // Initialize the Viewer thread and launch
-    if (bUseViewer)
-    {
+    if (bUseViewer) {
         mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker,
                               strSettingsFile, settings_);
         mptViewer = new thread(&Viewer::Run, mpViewer);
