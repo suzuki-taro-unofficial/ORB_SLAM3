@@ -57,13 +57,16 @@ void LocalMapping::RunOnce() {
         return;
     }
 
-    int num_FixedKF_BA = 0;
-    int num_OptKF_BA = 0;
-    int num_MPs_BA = 0;
-    int num_edges_BA = 0;
-
     // ある程度キーフレームが溜まっているならLocalBAをする
     if (mpAtlas->KeyFramesInMap() > 2) {
+        // この変数群は、IMUが使えても使えなくてもBAに渡されるが、
+        // IMUが使える場合には変更されない。
+        // また、IMUが使えない場合には変更されるが、結果は使われない
+        int num_FixedKF_BA = 0;
+        int num_OptKF_BA = 0;
+        int num_MPs_BA = 0;
+        int num_edges_BA = 0;
+
         // IMUを用いており、実際にIMUが有効化されている場合はその情報を用いて
         // 動作を行う。
         if (mbInertial && mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
