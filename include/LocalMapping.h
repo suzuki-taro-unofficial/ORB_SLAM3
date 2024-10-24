@@ -39,6 +39,11 @@ class LoopClosing;
 class Atlas;
 
 class LocalMapping {
+private:
+    /// TODO: Add comment
+    void RunOnce();
+    void LocalBA();
+
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular, bool bInertial,
@@ -48,8 +53,6 @@ public:
 
     void SetTracker(Tracking* pTracker);
 
-    /// TODO: Add comment
-    void RunOnce();
     /**
      * 内部でループをしており、以下の動作を行う
      * -
