@@ -90,9 +90,7 @@ void LoopClosing::Run() {
             if (bFindedRegion) {
                 if (mbMergeDetected) {
                     /// IMUを使用していてIMUが初期化されていない場合、処理を中断する。
-                    if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-                         mpTracker->mSensor == System::IMU_STEREO ||
-                         mpTracker->mSensor == System::IMU_RGBD) &&
+                    if (CheckUseIMU() &&
                         (!mpCurrentKF->GetMap()->isImuInitialized())) {
                         cout << "IMU is not initilized, merge is aborted"
                              << endl;
@@ -130,9 +128,7 @@ void LoopClosing::Run() {
                                 continue;
                             }
                             // If inertial, force only yaw
-                            if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-                                 mpTracker->mSensor == System::IMU_STEREO ||
-                                 mpTracker->mSensor == System::IMU_RGBD) &&
+                            if (CheckUseIMU() &&
                                 mpCurrentKF->GetMap()->GetIniertialBA1()) {
                                 Eigen::Vector3d phi = LogSO3(
                                     mSold_new.rotation().toRotationMatrix());
@@ -152,9 +148,7 @@ void LoopClosing::Run() {
 
                         /// マージの実行
                         // TODO UNCOMMENT
-                        if (mpTracker->mSensor == System::IMU_MONOCULAR ||
-                            mpTracker->mSensor == System::IMU_STEREO ||
-                            mpTracker->mSensor == System::IMU_RGBD)
+                        if (CheckUseIMU())
                             MergeLocal2();
                         else
                             MergeLocal();
@@ -216,10 +210,7 @@ void LoopClosing::Run() {
                             fabs(phi(2)) < 0.349f) {
                             if (mpCurrentKF->GetMap()->IsInertial()) {
                                 // If inertial, force only yaw
-                                if ((mpTracker->mSensor ==
-                                         System::IMU_MONOCULAR ||
-                                     mpTracker->mSensor == System::IMU_STEREO ||
-                                     mpTracker->mSensor == System::IMU_RGBD) &&
+                                if (CheckUseIMU() &&
                                     mpCurrentKF->GetMap()->GetIniertialBA2()) {
                                     phi(0) = 0;
                                     phi(1) = 0;
@@ -1475,9 +1466,7 @@ void LoopClosing::MergeLocal() {
               std::back_inserter(vpLocalCurrentWindowKFs));
     std::copy(spMergeConnectedKFs.begin(), spMergeConnectedKFs.end(),
               std::back_inserter(vpMergeConnectedKFs));
-    if (mpTracker->mSensor == System::IMU_MONOCULAR ||
-        mpTracker->mSensor == System::IMU_STEREO ||
-        mpTracker->mSensor == System::IMU_RGBD) {
+    if (CheckUseIMU()) {
         Optimizer::MergeInertialBA(mpCurrentKF, mpMergeMatchedKF, &bStop,
                                    pCurrentMap, vCorrectedSim3);
     } else {
@@ -1688,10 +1677,7 @@ void LoopClosing::MergeLocal2() {
 
     const int numKFnew = pCurrentMap->KeyFramesInMap();
 
-    if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-         mpTracker->mSensor == System::IMU_STEREO ||
-         mpTracker->mSensor == System::IMU_RGBD) &&
-        !pCurrentMap->GetIniertialBA2()) {
+    if (CheckUseIMU() && !pCurrentMap->GetIniertialBA2()) {
         // Map is not completly initialized
         Eigen::Vector3d bg, ba;
         bg << 0., 0., 0.;
@@ -2161,6 +2147,16 @@ void LoopClosing::RequestFinish() {
 bool LoopClosing::CheckFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinishRequested;
+}
+
+// added
+bool LoopClosing::CheckUseIMU() {
+    if (mpTracker->mSensor == System::IMU_MONOCULAR ||
+        mpTracker->mSensor == System::IMU_STEREO ||
+        mpTracker->mSensor == System::IMU_RGBD)
+        return true;
+
+    return false;
 }
 
 /// finishにロック

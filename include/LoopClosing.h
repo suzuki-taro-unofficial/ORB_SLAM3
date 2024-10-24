@@ -164,6 +164,7 @@ protected:
     std::mutex mMutexReset;
 
     bool CheckFinish();
+    bool CheckUseIMU();  // added
     void SetFinish();
     bool mbFinishRequested;
     bool mbFinished;
