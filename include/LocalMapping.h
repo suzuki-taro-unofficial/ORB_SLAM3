@@ -42,7 +42,6 @@ class LocalMapping {
 private:
     /// TODO: Add comment
     void RunOnce();
-    void LocalBA();
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

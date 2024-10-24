@@ -1,5 +1,7 @@
+#include "KeyFrame.h"
 #include "LocalMapping.h"
 #include "Optimizer.h"
+#include "Tracking.h"
 
 namespace ORB_SLAM3 {
 void LocalMapping::Run() {
@@ -33,6 +35,54 @@ void LocalMapping::Run() {
     SetFinish();
 }
 
+float DistanceOfKeyFrames(KeyFrame& kf1, KeyFrame& kf2) {
+    return (kf1.GetCameraCenter() - kf2.GetCameraCenter()).norm();
+}
+
+void LocalBA(const bool& mbInertial, KeyFrame* mpCurrentKeyFrame, float& mTinit, std::mutex& mMutexReset,
+             bool& mbResetRequestedActiveMap, Map*& mpMapToReset, bool& mbBadImu, Tracking* mpTracker,
+             const bool mbMonocular, bool& mbAbortBA) {
+    // この変数群は、IMUが使えても使えなくてもBAに渡されるが、
+    // IMUが使える場合には変更されない。
+    // また、IMUが使えない場合には変更されるが、結果は使われない
+    int num_FixedKF_BA = 0;
+    int num_OptKF_BA = 0;
+    int num_MPs_BA = 0;
+    int num_edges_BA = 0;
+
+    // IMUを用いており、実際にIMUが有効化されている場合はその情報を用いて
+    // 動作を行う。
+    if (mbInertial && mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
+        float dist = DistanceOfKeyFrames(*mpCurrentKeyFrame, *mpCurrentKeyFrame->mPrevKF) +
+                     DistanceOfKeyFrames(*mpCurrentKeyFrame->mPrevKF, *mpCurrentKeyFrame->mPrevKF->mPrevKF);
+
+        if (dist > 0.05) mTinit += mpCurrentKeyFrame->mTimeStamp - mpCurrentKeyFrame->mPrevKF->mTimeStamp;
+        if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()) {
+            if ((mTinit < 10.f) && (dist < 0.02)) {
+                cout << "Not enough motion for initializing. "
+                        "Reseting..."
+                     << endl;
+                unique_lock<mutex> lock(mMutexReset);
+                mbResetRequestedActiveMap = true;
+                mpMapToReset = mpCurrentKeyFrame->GetMap();
+                mbBadImu = true;
+            }
+        }
+
+        // 外れ値でない(Inlier)マップポイントの数が十分な場合にtrue
+        bool bLarge = ((mpTracker->GetMatchesInliers() > 75) && mbMonocular) ||
+                      ((mpTracker->GetMatchesInliers() > 100) && !mbMonocular);
+        // IMUが使えるのでLocalInertialBA
+        Optimizer::LocalInertialBA(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
+                                   num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
+                                   !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+    } else {
+        // IMUが使えないのでLocalBundleAdjustment
+        Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
+                                         num_OptKF_BA, num_MPs_BA, num_edges_BA);
+    }
+}
+
 void LocalMapping::RunOnce() {
     // BoW conversion and insertion in Map
     ProcessNewKeyFrame();
@@ -59,7 +109,8 @@ void LocalMapping::RunOnce() {
 
     // ある程度キーフレームが溜まっているならLocalBAをする
     if (mpAtlas->KeyFramesInMap() > 2) {
-        LocalBA();
+        LocalBA(mbInertial, mpCurrentKeyFrame, mTinit, mMutexReset, mbResetRequestedActiveMap, mpMapToReset, mbBadImu,
+                mpTracker, mbMonocular, mbAbortBA);
     }
 
     // Initialize IMU here
@@ -115,45 +166,4 @@ void LocalMapping::RunOnce() {
     mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
 }
 
-void LocalMapping::LocalBA() {
-    // この変数群は、IMUが使えても使えなくてもBAに渡されるが、
-    // IMUが使える場合には変更されない。
-    // また、IMUが使えない場合には変更されるが、結果は使われない
-    int num_FixedKF_BA = 0;
-    int num_OptKF_BA = 0;
-    int num_MPs_BA = 0;
-    int num_edges_BA = 0;
-
-    // IMUを用いており、実際にIMUが有効化されている場合はその情報を用いて
-    // 動作を行う。
-    if (mbInertial && mpCurrentKeyFrame->GetMap()->isImuInitialized()) {
-        float dist = DistanceOfKeyFrames(*mpCurrentKeyFrame, *mpCurrentKeyFrame->mPrevKF) +
-                     DistanceOfKeyFrames(*mpCurrentKeyFrame->mPrevKF, *mpCurrentKeyFrame->mPrevKF->mPrevKF);
-
-        if (dist > 0.05) mTinit += mpCurrentKeyFrame->mTimeStamp - mpCurrentKeyFrame->mPrevKF->mTimeStamp;
-        if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()) {
-            if ((mTinit < 10.f) && (dist < 0.02)) {
-                cout << "Not enough motion for initializing. "
-                        "Reseting..."
-                     << endl;
-                unique_lock<mutex> lock(mMutexReset);
-                mbResetRequestedActiveMap = true;
-                mpMapToReset = mpCurrentKeyFrame->GetMap();
-                mbBadImu = true;
-            }
-        }
-
-        // 外れ値でない(Inlier)マップポイントの数が十分な場合にtrue
-        bool bLarge = ((mpTracker->GetMatchesInliers() > 75) && mbMonocular) ||
-                      ((mpTracker->GetMatchesInliers() > 100) && !mbMonocular);
-        // IMUが使えるのでLocalInertialBA
-        Optimizer::LocalInertialBA(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
-                                   num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
-                                   !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
-    } else {
-        // IMUが使えないのでLocalBundleAdjustment
-        Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(), num_FixedKF_BA,
-                                         num_OptKF_BA, num_MPs_BA, num_edges_BA);
-    }
-}
 }  // namespace ORB_SLAM3
