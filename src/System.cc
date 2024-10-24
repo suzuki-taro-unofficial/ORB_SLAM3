@@ -188,10 +188,8 @@ System::System(const string& strVocFile, const string& strSettingsFile,
         mpLocalMapper->mbFarPoints = false;
 
     // Initialize the Loop Closing thread and launch
-    //  mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
     mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary,
-                                   mSensor != MONOCULAR,
-                                   activeLC);  // mSensor!=MONOCULAR);
+                                   mSensor != MONOCULAR, activeLC);
     mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
 
     // Set pointers between threads
@@ -713,12 +711,6 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
     list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
     list<bool>::iterator lbL = mpTracker->mlbLost.begin();
 
-    // cout << "size mlpReferences: " << mpTracker->mlpReferences.size() <<
-    // endl; cout << "size mlRelativeFramePoses: " <<
-    // mpTracker->mlRelativeFramePoses.size() << endl; cout << "size
-    // mpTracker->mlFrameTimes: " << mpTracker->mlFrameTimes.size() << endl;
-    // cout << "size mpTracker->mlbLost: " << mpTracker->mlbLost.size() << endl;
-
     for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
               lend = mpTracker->mlRelativeFramePoses.end();
          lit != lend; lit++, lRit++, lT++, lbL++) {
@@ -1046,8 +1038,6 @@ void System::InsertTrackTime(double& time) {
 
 void System::SaveAtlas(int type) {
     if (!mStrSaveAtlasToFile.empty()) {
-        // clock_t start = clock();
-
         // Save the current session
         mpAtlas->PreSave();
 
