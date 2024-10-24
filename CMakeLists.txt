@@ -61,6 +61,7 @@ src/LocalMapping.cc
 src/LocalMapping/CreateNewMapPoints.cc
 src/LocalMapping/KeyFrameCulling.cc
 src/LocalMapping/InitializeIMU.cc
+src/LocalMapping/Run.cc
 src/LoopClosing.cc
 src/ORBextractor.cc
 src/ORBmatcher.cc
