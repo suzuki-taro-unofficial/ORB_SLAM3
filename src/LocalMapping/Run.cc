@@ -1,4 +1,5 @@
 #include "LocalMapping.h"
+#include "Optimizer.h"
 
 namespace ORB_SLAM3 {
 void LocalMapping::Run() {
@@ -51,15 +52,15 @@ void LocalMapping::RunOnce() {
         SearchInNeighbors();
     }
 
-    int num_FixedKF_BA = 0;
-    int num_OptKF_BA = 0;
-    int num_MPs_BA = 0;
-    int num_edges_BA = 0;
-
     if (CheckNewKeyFrames() || stopRequested()) {
         mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
         return;
     }
+
+    int num_FixedKF_BA = 0;
+    int num_OptKF_BA = 0;
+    int num_MPs_BA = 0;
+    int num_edges_BA = 0;
 
     // ある程度キーフレームが溜まっているならLocalBAをする
     if (mpAtlas->KeyFramesInMap() > 2) {
