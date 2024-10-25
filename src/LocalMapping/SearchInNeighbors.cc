@@ -4,7 +4,7 @@
 
 namespace ORB_SLAM3 {
 
-void getFromCovisiblity(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame) {
+void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame) {
     const vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
     for (auto pKFi : vpNeighKFs) {
         if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) continue;
@@ -13,8 +13,7 @@ void getFromCovisiblity(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* 
     }
 }
 
-void getFromCovisibilityAfterTheNext(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame,
-                                     const bool& mbAbortBA) {
+void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA) {
     // Add some covisible of covisible
     // Extend to some second neighbors if abort is not requested
     for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
@@ -57,8 +56,8 @@ std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame
 
     vector<KeyFrame*> vpTargetKFs;
 
-    getFromCovisiblity(vpTargetKFs, nn, mpCurrentKeyFrame);
-    getFromCovisibilityAfterTheNext(vpTargetKFs, mpCurrentKeyFrame, mbAbortBA);
+    getFromCovisible(vpTargetKFs, nn, mpCurrentKeyFrame);
+    getFromCovisibleOfCovisible(vpTargetKFs, mpCurrentKeyFrame, mbAbortBA);
     if (mbInertial) {
         getFromPrevKF(vpTargetKFs, mpCurrentKeyFrame);
     }
