@@ -231,7 +231,6 @@ bool LoopClosing::CheckNewKeyFrames() {
 }
 
 /**
- * ループキューに対してロック、キーフレームに副作用。
  *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
  *検出できたらtrueを返す。
  */
@@ -240,18 +239,8 @@ bool LoopClosing::NewDetectCommonRegions() {
     // performed
     if (!mbActiveLC) return false;
 
-    /// キーフレームの取り出し
-    {
-        unique_lock<mutex> lock(mMutexLoopQueue);
-        mpCurrentKF = mlpLoopKeyFrameQueue.front();
-        mlpLoopKeyFrameQueue.pop_front();
-        // Avoid that a keyframe can be erased while it is being process by this
-        // thread
-        mpCurrentKF->SetNotErase();
-        mpCurrentKF->mbCurrentPlaceRecognition = true;
-
-        mpLastMap = mpCurrentKF->GetMap();
-    }
+    // キーフレームの取り出し
+    SetCurrentKF();
 
     if (CheckSkipCondition()) return false;
 
@@ -2032,6 +2021,18 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
 void LoopClosing::RequestFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     mbFinishRequested = true;
+}
+
+// added
+void LoopClosing::SetCurrentKF() {
+    unique_lock<mutex> lock(mMutexLoopQueue);
+    mpCurrentKF = mlpLoopKeyFrameQueue.front();
+    mlpLoopKeyFrameQueue.pop_front();
+    // Avoid that a keyframe can be erased while it is being process by this
+    // thread
+    mpCurrentKF->SetNotErase();
+    mpCurrentKF->mbCurrentPlaceRecognition = true;
+    mpLastMap = mpCurrentKF->GetMap();
 }
 
 // added

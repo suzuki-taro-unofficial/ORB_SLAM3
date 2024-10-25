@@ -162,8 +162,9 @@ protected:
     Map* mpMapToReset;
     std::mutex mMutexReset;
 
-    void ResetLoopVariable();
-    void ResetMergeVariable();
+    void SetCurrentKF();
+    void ResetLoopVariable();   // added
+    void ResetMergeVariable();  // added
 
     bool CheckFinish();
     bool CheckUseIMU();  // added
