@@ -66,10 +66,6 @@ void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser) { mpLoopCloser = pLoo
 
 void LocalMapping::SetTracker(Tracking* pTracker) { mpTracker = pTracker; }
 
-float LocalMapping::DistanceOfKeyFrames(KeyFrame& kf1, KeyFrame& kf2) {
-    return (kf1.GetCameraCenter() - kf2.GetCameraCenter()).norm();
-}
-
 void LocalMapping::InsertKeyFrame(KeyFrame* pKF) {
     unique_lock<mutex> lock(mMutexNewKFs);
     mlNewKeyFrames.push_back(pKF);

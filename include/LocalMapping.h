@@ -100,8 +100,6 @@ public:
     double GetCurrKFTime();
     KeyFrame* GetCurrKF();
 
-    float DistanceOfKeyFrames(KeyFrame& kf1, KeyFrame& kf2);
-
     std::mutex mMutexImuInit;
 
     Eigen::MatrixXd mcovInertial;
