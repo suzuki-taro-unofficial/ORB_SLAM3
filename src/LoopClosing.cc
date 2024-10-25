@@ -95,16 +95,11 @@ void LoopClosing::Run() {
                         cout << "IMU is not initilized, merge is aborted"
                              << endl;
                     } else {
-                        Sophus::SE3d mTmw =
-                            mpMergeMatchedKF->GetPose().cast<double>();
-                        g2o::Sim3 gSmw2(mTmw.unit_quaternion(),
-                                        mTmw.translation(), 1.0);
                         Sophus::SE3d mTcw =
                             mpCurrentKF->GetPose().cast<double>();
                         g2o::Sim3 gScw1(mTcw.unit_quaternion(),
                                         mTcw.translation(), 1.0);
                         g2o::Sim3 gSw2c = mg2oMergeSlw.inverse();
-                        g2o::Sim3 gSw1m = mg2oMergeSlw;
 
                         mSold_new = (gSw2c * gScw1);
 
