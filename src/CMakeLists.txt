@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME} SHARED
     LocalMapping/CreateNewMapPoints.cc
     LocalMapping/KeyFrameCulling.cc
     LocalMapping/InitializeIMU.cc
+    LocalMapping/SearchInNeighbors.cc
     LocalMapping/Run.cc
     LoopClosing.cc
     ORBextractor.cc

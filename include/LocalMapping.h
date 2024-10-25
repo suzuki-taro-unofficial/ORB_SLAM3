@@ -101,7 +101,6 @@ public:
     KeyFrame* GetCurrKF();
 
     float DistanceOfKeyFrames(KeyFrame& kf1, KeyFrame& kf2);
-    std::vector<KeyFrame*> GetNeighbors();
 
     std::mutex mMutexImuInit;
 
