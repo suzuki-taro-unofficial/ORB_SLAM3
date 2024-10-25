@@ -1,6 +1,8 @@
 add_library(${PROJECT_NAME} SHARED
     System.cc
     Tracking.cc
+    Tracking/ParameterManager.cc
+    Tracking/PreintegrateIMU.cc
     LocalMapping.cc
     LoopClosing.cc
     ORBextractor.cc
@@ -29,6 +31,8 @@ add_library(${PROJECT_NAME} SHARED
     Settings.cc
     ${PROJECT_SOURCE_DIR}/include/System.h
     ${PROJECT_SOURCE_DIR}/include/Tracking.h
+    ${PROJECT_SOURCE_DIR}/include/Tracking/ParameterManager.h
+    ${PROJECT_SOURCE_DIR}/include/Tracking/PreintegrateIMU.h
     ${PROJECT_SOURCE_DIR}/include/LocalMapping.h
     ${PROJECT_SOURCE_DIR}/include/LoopClosing.h
     ${PROJECT_SOURCE_DIR}/include/ORBextractor.h

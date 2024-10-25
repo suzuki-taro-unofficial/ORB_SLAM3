@@ -49,6 +49,8 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
       mpORBVocabulary(pVoc),
       mpKeyFrameDB(pKFDB),
       mbReadyToInitializate(false),
+      mParam(sensor, pAtlas, pFrameDrawer, settings),
+      mPIntIMU(IMU::Bias(), *mParam.mpImuCalib),
       mpSystem(pSys),
       mpViewer(NULL),
       bStepByStep(false),
@@ -60,12 +62,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
       mnInitialFrameId(0),
       mbCreatedMap(false),
       mnFirstFrameId(0),
-      mpCamera2(nullptr),
       mpLastKeyFrame(static_cast<KeyFrame *>(NULL)) {
-    // Load camera parameters from settings file
-    assert(settings);
-    newParameterLoader(settings);
-
     initID = 0;
     lastID = 0;
     mbInitWith3KFs = false;
@@ -88,95 +85,6 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
 
 Tracking::~Tracking() {
     // f_track_stats.close();
-}
-
-void Tracking::newParameterLoader(Settings *settings) {
-    mpCamera = settings->camera1();
-    mpCamera = mpAtlas->AddCamera(mpCamera);
-
-    if (settings->needToUndistort()) {
-        mDistCoef = settings->camera1DistortionCoef();
-    } else {
-        mDistCoef = cv::Mat::zeros(4, 1, CV_32F);
-    }
-
-    // TODO: missing image scaling and rectification
-    mImageScale = 1.0f;
-
-    mK = cv::Mat::eye(3, 3, CV_32F);
-    mK.at<float>(0, 0) = mpCamera->getParameter(0);
-    mK.at<float>(1, 1) = mpCamera->getParameter(1);
-    mK.at<float>(0, 2) = mpCamera->getParameter(2);
-    mK.at<float>(1, 2) = mpCamera->getParameter(3);
-
-    mK_.setIdentity();
-    mK_(0, 0) = mpCamera->getParameter(0);
-    mK_(1, 1) = mpCamera->getParameter(1);
-    mK_(0, 2) = mpCamera->getParameter(2);
-    mK_(1, 2) = mpCamera->getParameter(3);
-
-    if ((mSensor == System::STEREO || mSensor == System::IMU_STEREO ||
-         mSensor == System::IMU_RGBD) &&
-        settings->cameraType() == Settings::KannalaBrandt) {
-        mpCamera2 = settings->camera2();
-        mpCamera2 = mpAtlas->AddCamera(mpCamera2);
-
-        mTlr = settings->Tlr();
-
-        mpFrameDrawer->both = true;
-    }
-
-    if (mSensor == System::STEREO || mSensor == System::RGBD ||
-        mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) {
-        mbf = settings->bf();
-        mThDepth = settings->b() * settings->thDepth();
-    }
-
-    if (mSensor == System::RGBD || mSensor == System::IMU_RGBD) {
-        mDepthMapFactor = settings->depthMapFactor();
-        if (fabs(mDepthMapFactor) < 1e-5)
-            mDepthMapFactor = 1;
-        else
-            mDepthMapFactor = 1.0f / mDepthMapFactor;
-    }
-
-    mMinFrames = 0;
-    mMaxFrames = settings->fps();
-    mbRGB = settings->rgb();
-
-    // ORB parameters
-    int nFeatures = settings->nFeatures();
-    int nLevels = settings->nLevels();
-    int fIniThFAST = settings->initThFAST();
-    int fMinThFAST = settings->minThFAST();
-    float fScaleFactor = settings->scaleFactor();
-
-    mpORBextractorLeft = new ORBextractor(nFeatures, fScaleFactor, nLevels,
-                                          fIniThFAST, fMinThFAST);
-
-    if (mSensor == System::STEREO || mSensor == System::IMU_STEREO)
-        mpORBextractorRight = new ORBextractor(nFeatures, fScaleFactor, nLevels,
-                                               fIniThFAST, fMinThFAST);
-
-    if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR)
-        mpIniORBextractor = new ORBextractor(5 * nFeatures, fScaleFactor,
-                                             nLevels, fIniThFAST, fMinThFAST);
-
-    // IMU parameters
-    Sophus::SE3f Tbc = settings->Tbc();
-    mInsertKFsLost = settings->insertKFsWhenLost();
-    mImuFreq = settings->imuFrequency();
-    mImuPer = 0.001;  // 1.0 / (double) mImuFreq;     //TODO: ESTO ESTA BIEN?
-    float Ng = settings->noiseGyro();
-    float Na = settings->noiseAcc();
-    float Ngw = settings->gyroWalk();
-    float Naw = settings->accWalk();
-
-    const float sf = sqrt(mImuFreq);
-    mpImuCalib = new IMU::Calib(Tbc, Ng * sf, Na * sf, Ngw / sf, Naw / sf);
-
-    mpImuPreintegratedFromLastKF =
-        new IMU::Preintegrated(IMU::Bias(), *mpImuCalib);
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper) {
@@ -202,7 +110,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft,
     mImRight = imRectRight;
 
     if (mImGray.channels() == 3) {
-        if (mbRGB) {
+        if (mParam.mbRGB) {
             cvtColor(mImGray, mImGray, cv::COLOR_RGB2GRAY);
             cvtColor(imGrayRight, imGrayRight, cv::COLOR_RGB2GRAY);
         } else {
@@ -210,7 +118,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft,
             cvtColor(imGrayRight, imGrayRight, cv::COLOR_BGR2GRAY);
         }
     } else if (mImGray.channels() == 4) {
-        if (mbRGB) {
+        if (mParam.mbRGB) {
             cvtColor(mImGray, mImGray, cv::COLOR_RGBA2GRAY);
             cvtColor(imGrayRight, imGrayRight, cv::COLOR_RGBA2GRAY);
         } else {
@@ -219,26 +127,29 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft,
         }
     }
 
-    if (mSensor == System::STEREO && !mpCamera2)
-        mCurrentFrame =
-            Frame(mImGray, imGrayRight, timestamp, mpORBextractorLeft,
-                  mpORBextractorRight, mpORBVocabulary, mK, mDistCoef, mbf,
-                  mThDepth, mpCamera);
-    else if (mSensor == System::STEREO && mpCamera2)
-        mCurrentFrame =
-            Frame(mImGray, imGrayRight, timestamp, mpORBextractorLeft,
-                  mpORBextractorRight, mpORBVocabulary, mK, mDistCoef, mbf,
-                  mThDepth, mpCamera, mpCamera2, mTlr);
-    else if (mSensor == System::IMU_STEREO && !mpCamera2)
-        mCurrentFrame =
-            Frame(mImGray, imGrayRight, timestamp, mpORBextractorLeft,
-                  mpORBextractorRight, mpORBVocabulary, mK, mDistCoef, mbf,
-                  mThDepth, mpCamera, &mLastFrame, *mpImuCalib);
-    else if (mSensor == System::IMU_STEREO && mpCamera2)
+    if (mSensor == System::STEREO && !mParam.mpCamera2)
         mCurrentFrame = Frame(
-            mImGray, imGrayRight, timestamp, mpORBextractorLeft,
-            mpORBextractorRight, mpORBVocabulary, mK, mDistCoef, mbf, mThDepth,
-            mpCamera, mpCamera2, mTlr, &mLastFrame, *mpImuCalib);
+            mImGray, imGrayRight, timestamp, mParam.mpORBextractorLeft,
+            mParam.mpORBextractorRight, mpORBVocabulary, mParam.mK,
+            mParam.mDistCoef, mParam.mbf, mParam.mThDepth, mParam.mpCamera);
+    else if (mSensor == System::STEREO && mParam.mpCamera2)
+        mCurrentFrame =
+            Frame(mImGray, imGrayRight, timestamp, mParam.mpORBextractorLeft,
+                  mParam.mpORBextractorRight, mpORBVocabulary, mParam.mK,
+                  mParam.mDistCoef, mParam.mbf, mParam.mThDepth,
+                  mParam.mpCamera, mParam.mpCamera2, mParam.mTlr);
+    else if (mSensor == System::IMU_STEREO && !mParam.mpCamera2)
+        mCurrentFrame =
+            Frame(mImGray, imGrayRight, timestamp, mParam.mpORBextractorLeft,
+                  mParam.mpORBextractorRight, mpORBVocabulary, mParam.mK,
+                  mParam.mDistCoef, mParam.mbf, mParam.mThDepth,
+                  mParam.mpCamera, &mLastFrame, *mParam.mpImuCalib);
+    else if (mSensor == System::IMU_STEREO && mParam.mpCamera2)
+        mCurrentFrame = Frame(
+            mImGray, imGrayRight, timestamp, mParam.mpORBextractorLeft,
+            mParam.mpORBextractorRight, mpORBVocabulary, mParam.mK,
+            mParam.mDistCoef, mParam.mbf, mParam.mThDepth, mParam.mpCamera,
+            mParam.mpCamera2, mParam.mTlr, &mLastFrame, *mParam.mpImuCalib);
 
     mCurrentFrame.mNameFile = filename;
     mCurrentFrame.mnDataset = mnNumDataset;
@@ -254,28 +165,31 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD,
     cv::Mat imDepth = imD;
 
     if (mImGray.channels() == 3) {
-        if (mbRGB)
+        if (mParam.mbRGB)
             cvtColor(mImGray, mImGray, cv::COLOR_RGB2GRAY);
         else
             cvtColor(mImGray, mImGray, cv::COLOR_BGR2GRAY);
     } else if (mImGray.channels() == 4) {
-        if (mbRGB)
+        if (mParam.mbRGB)
             cvtColor(mImGray, mImGray, cv::COLOR_RGBA2GRAY);
         else
             cvtColor(mImGray, mImGray, cv::COLOR_BGRA2GRAY);
     }
 
-    if ((fabs(mDepthMapFactor - 1.0f) > 1e-5) || imDepth.type() != CV_32F)
-        imDepth.convertTo(imDepth, CV_32F, mDepthMapFactor);
+    if ((fabs(mParam.mDepthMapFactor - 1.0f) > 1e-5) ||
+        imDepth.type() != CV_32F)
+        imDepth.convertTo(imDepth, CV_32F, mParam.mDepthMapFactor);
 
     if (mSensor == System::RGBD)
         mCurrentFrame =
-            Frame(mImGray, imDepth, timestamp, mpORBextractorLeft,
-                  mpORBVocabulary, mK, mDistCoef, mbf, mThDepth, mpCamera);
+            Frame(mImGray, imDepth, timestamp, mParam.mpORBextractorLeft,
+                  mpORBVocabulary, mParam.mK, mParam.mDistCoef, mParam.mbf,
+                  mParam.mThDepth, mParam.mpCamera);
     else if (mSensor == System::IMU_RGBD)
-        mCurrentFrame = Frame(mImGray, imDepth, timestamp, mpORBextractorLeft,
-                              mpORBVocabulary, mK, mDistCoef, mbf, mThDepth,
-                              mpCamera, &mLastFrame, *mpImuCalib);
+        mCurrentFrame = Frame(
+            mImGray, imDepth, timestamp, mParam.mpORBextractorLeft,
+            mpORBVocabulary, mParam.mK, mParam.mDistCoef, mParam.mbf,
+            mParam.mThDepth, mParam.mpCamera, &mLastFrame, *mParam.mpImuCalib);
 
     mCurrentFrame.mNameFile = filename;
     mCurrentFrame.mnDataset = mnNumDataset;
@@ -290,12 +204,12 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im,
                                           string filename) {
     mImGray = im;
     if (mImGray.channels() == 3) {
-        if (mbRGB)
+        if (mParam.mbRGB)
             cvtColor(mImGray, mImGray, cv::COLOR_RGB2GRAY);
         else
             cvtColor(mImGray, mImGray, cv::COLOR_BGR2GRAY);
     } else if (mImGray.channels() == 4) {
-        if (mbRGB)
+        if (mParam.mbRGB)
             cvtColor(mImGray, mImGray, cv::COLOR_RGBA2GRAY);
         else
             cvtColor(mImGray, mImGray, cv::COLOR_BGRA2GRAY);
@@ -303,23 +217,25 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im,
 
     if (mSensor == System::MONOCULAR) {
         if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET ||
-            (lastID - initID) < mMaxFrames)
-            mCurrentFrame =
-                Frame(mImGray, timestamp, mpIniORBextractor, mpORBVocabulary,
-                      mpCamera, mDistCoef, mbf, mThDepth);
+            (lastID - initID) < mParam.mMaxFrames)
+            mCurrentFrame = Frame(
+                mImGray, timestamp, mParam.mpIniORBextractor, mpORBVocabulary,
+                mParam.mpCamera, mParam.mDistCoef, mParam.mbf, mParam.mThDepth);
         else
-            mCurrentFrame =
-                Frame(mImGray, timestamp, mpORBextractorLeft, mpORBVocabulary,
-                      mpCamera, mDistCoef, mbf, mThDepth);
+            mCurrentFrame = Frame(
+                mImGray, timestamp, mParam.mpORBextractorLeft, mpORBVocabulary,
+                mParam.mpCamera, mParam.mDistCoef, mParam.mbf, mParam.mThDepth);
     } else if (mSensor == System::IMU_MONOCULAR) {
         if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
-            mCurrentFrame = Frame(mImGray, timestamp, mpIniORBextractor,
-                                  mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                  mThDepth, &mLastFrame, *mpImuCalib);
+            mCurrentFrame = Frame(mImGray, timestamp, mParam.mpIniORBextractor,
+                                  mpORBVocabulary, mParam.mpCamera,
+                                  mParam.mDistCoef, mParam.mbf, mParam.mThDepth,
+                                  &mLastFrame, *mParam.mpImuCalib);
         } else
-            mCurrentFrame = Frame(mImGray, timestamp, mpORBextractorLeft,
-                                  mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                  mThDepth, &mLastFrame, *mpImuCalib);
+            mCurrentFrame = Frame(mImGray, timestamp, mParam.mpORBextractorLeft,
+                                  mpORBVocabulary, mParam.mpCamera,
+                                  mParam.mDistCoef, mParam.mbf, mParam.mThDepth,
+                                  &mLastFrame, *mParam.mpImuCalib);
     }
 
     if (mState == NO_IMAGES_YET) t0 = timestamp;
@@ -338,37 +254,26 @@ void Tracking::GrabImuData(const IMU::Point &imuMeasurement) {
     mlQueueImuData.push_back(imuMeasurement);
 }
 
-void Tracking::PreintegrateIMU() {
-    if (!mCurrentFrame.mpPrevFrame) {
-        Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
-        mCurrentFrame.setIntegrated();
-        return;
-    }
-
-    mvImuFromLastFrame.clear();
-    mvImuFromLastFrame.reserve(mlQueueImuData.size());
-    if (mlQueueImuData.size() == 0) {
-        Verbose::PrintMess("Not IMU data in mlQueueImuData!!",
-                           Verbose::VERBOSITY_NORMAL);
-        mCurrentFrame.setIntegrated();
-        return;
-    }
-
-    // キューにあるIMUのデータのうち、以前のフレームと現在のフレームまでの間に計測されたものを取り出す。
+/// `in`にあるIMUデータのうち、`pCurrentFrame`と`pCurrentFrame->mpPrevFrame`の間にあるデータを`out`に格納する
+static void PopIMUDataFromQueueByCurrentFrame(
+    const Frame *pCurrentFrame, std::mutex &queueMutex,
+    const tracking::ParameterManager &param, std::list<IMU::Point> &in,
+    std::vector<IMU::Point> &out) {
     while (true) {
         bool bSleep = false;
         {
-            unique_lock<mutex> lock(mMutexImuQueue);
-            if (!mlQueueImuData.empty()) {
-                IMU::Point *m = &mlQueueImuData.front();
+            unique_lock<mutex> lock(queueMutex);
+            if (!in.empty()) {
+                IMU::Point *m = &in.front();
                 cout.precision(17);
-                if (m->t < mCurrentFrame.mpPrevFrame->mTimeStamp - mImuPer) {
-                    mlQueueImuData.pop_front();
-                } else if (m->t < mCurrentFrame.mTimeStamp - mImuPer) {
-                    mvImuFromLastFrame.push_back(*m);
-                    mlQueueImuData.pop_front();
+                if (m->t <
+                    pCurrentFrame->mpPrevFrame->mTimeStamp - param.mImuPer) {
+                    in.pop_front();
+                } else if (m->t < pCurrentFrame->mTimeStamp - param.mImuPer) {
+                    out.push_back(*m);
+                    in.pop_front();
                 } else {
-                    mvImuFromLastFrame.push_back(*m);
+                    out.push_back(*m);
                     break;
                 }
             } else {
@@ -378,69 +283,42 @@ void Tracking::PreintegrateIMU() {
         }
         if (bSleep) usleep(500);
     }
+}
 
-    // 意図しているのは`mvImuFromLastFrame.size()`が0だとしたら条件式がおかしい気がする。
-    const int n = mvImuFromLastFrame.size() - 1;
-    if (n == 0) {
+/// `mPIntIMU.Preintegrate`を実行する
+void Tracking::PreintegrateIMU() {
+    static std::vector<IMU::Point> vImuFromLastFrame;
+
+    if (!mCurrentFrame.mpPrevFrame) {
+        Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
+        mCurrentFrame.setIntegrated();
+        return;
+    }
+
+    // キューの中からデータを取り出し`mvImuFromLastFrame`に格納する
+    vImuFromLastFrame.clear();
+    vImuFromLastFrame.reserve(mlQueueImuData.size());
+    if (mlQueueImuData.size() == 0) {
+        Verbose::PrintMess("Not IMU data in mlQueueImuData!!",
+                           Verbose::VERBOSITY_NORMAL);
+        mCurrentFrame.setIntegrated();
+        return;
+    } else {
+        PopIMUDataFromQueueByCurrentFrame(&mCurrentFrame, mMutexImuQueue,
+                                          mParam, mlQueueImuData,
+                                          vImuFromLastFrame);
+    }
+
+    if (vImuFromLastFrame.size() == 0) {
         cout << "Empty IMU measurements vector!!!\n";
         return;
     }
 
-    IMU::Preintegrated *pImuPreintegratedFromLastFrame =
-        new IMU::Preintegrated(mLastFrame.mImuBias, mCurrentFrame.mImuCalib);
+    mPIntIMU.Preintegrate(vImuFromLastFrame, mLastFrame, mCurrentFrame);
 
-    for (int i = 0; i < n; i++) {
-        float tstep;
-        Eigen::Vector3f acc, angVel;
-        if ((i == 0) && (i < (n - 1))) {
-            float tab = mvImuFromLastFrame[i + 1].t - mvImuFromLastFrame[i].t;
-            float tini =
-                mvImuFromLastFrame[i].t - mCurrentFrame.mpPrevFrame->mTimeStamp;
-            acc = (mvImuFromLastFrame[i].a + mvImuFromLastFrame[i + 1].a -
-                   (mvImuFromLastFrame[i + 1].a - mvImuFromLastFrame[i].a) *
-                       (tini / tab)) *
-                  0.5f;
-            angVel = (mvImuFromLastFrame[i].w + mvImuFromLastFrame[i + 1].w -
-                      (mvImuFromLastFrame[i + 1].w - mvImuFromLastFrame[i].w) *
-                          (tini / tab)) *
-                     0.5f;
-            tstep = mvImuFromLastFrame[i + 1].t -
-                    mCurrentFrame.mpPrevFrame->mTimeStamp;
-        } else if (i < (n - 1)) {
-            acc =
-                (mvImuFromLastFrame[i].a + mvImuFromLastFrame[i + 1].a) * 0.5f;
-            angVel =
-                (mvImuFromLastFrame[i].w + mvImuFromLastFrame[i + 1].w) * 0.5f;
-            tstep = mvImuFromLastFrame[i + 1].t - mvImuFromLastFrame[i].t;
-        } else if ((i > 0) && (i == (n - 1))) {
-            float tab = mvImuFromLastFrame[i + 1].t - mvImuFromLastFrame[i].t;
-            float tend = mvImuFromLastFrame[i + 1].t - mCurrentFrame.mTimeStamp;
-            acc = (mvImuFromLastFrame[i].a + mvImuFromLastFrame[i + 1].a -
-                   (mvImuFromLastFrame[i + 1].a - mvImuFromLastFrame[i].a) *
-                       (tend / tab)) *
-                  0.5f;
-            angVel = (mvImuFromLastFrame[i].w + mvImuFromLastFrame[i + 1].w -
-                      (mvImuFromLastFrame[i + 1].w - mvImuFromLastFrame[i].w) *
-                          (tend / tab)) *
-                     0.5f;
-            tstep = mCurrentFrame.mTimeStamp - mvImuFromLastFrame[i].t;
-        } else if ((i == 0) && (i == (n - 1))) {
-            acc = mvImuFromLastFrame[i].a;
-            angVel = mvImuFromLastFrame[i].w;
-            tstep = mCurrentFrame.mTimeStamp -
-                    mCurrentFrame.mpPrevFrame->mTimeStamp;
-        }
-
-        if (!mpImuPreintegratedFromLastKF)
-            cout << "mpImuPreintegratedFromLastKF does not exist" << endl;
-        mpImuPreintegratedFromLastKF->IntegrateNewMeasurement(acc, angVel,
-                                                              tstep);
-        pImuPreintegratedFromLastFrame->IntegrateNewMeasurement(acc, angVel,
-                                                                tstep);
-    }
-
-    mCurrentFrame.mpImuPreintegratedFrame = pImuPreintegratedFromLastFrame;
-    mCurrentFrame.mpImuPreintegrated = mpImuPreintegratedFromLastKF;
+    mCurrentFrame.mpImuPreintegratedFrame =
+        mPIntIMU.mpImuPreintegratedFromLastFrame;
+    mCurrentFrame.mpImuPreintegrated = mPIntIMU.mpImuPreintegratedFromLastKF;
     mCurrentFrame.mpLastKeyFrame = mpLastKeyFrame;
 
     mCurrentFrame.setIntegrated();
@@ -458,18 +336,18 @@ bool Tracking::PredictStateIMU() {
         const Eigen::Vector3f Vwb1 = mpLastKeyFrame->GetVelocity();
 
         const Eigen::Vector3f Gz(0, 0, -IMU::GRAVITY_VALUE);
-        const float t12 = mpImuPreintegratedFromLastKF->dT;
+        const float t12 = mPIntIMU.mpImuPreintegratedFromLastKF->dT;
 
         Eigen::Matrix3f Rwb2 = IMU::NormalizeRotation(
-            Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaRotation(
+            Rwb1 * mPIntIMU.mpImuPreintegratedFromLastKF->GetDeltaRotation(
                        mpLastKeyFrame->GetImuBias()));
         Eigen::Vector3f twb2 =
             twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
-            Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaPosition(
+            Rwb1 * mPIntIMU.mpImuPreintegratedFromLastKF->GetDeltaPosition(
                        mpLastKeyFrame->GetImuBias());
         Eigen::Vector3f Vwb2 =
             Vwb1 + t12 * Gz +
-            Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaVelocity(
+            Rwb1 * mPIntIMU.mpImuPreintegratedFromLastKF->GetDeltaVelocity(
                        mpLastKeyFrame->GetImuBias());
         mCurrentFrame.SetImuPoseVelocity(Rwb2, twb2, Vwb2);
 
@@ -888,10 +766,11 @@ void Tracking::Track() {
             bool bNeedKF = NeedNewKeyFrame();
 
             // Check if we need to insert a new keyframe
-            if (bNeedKF && (bOK || (mInsertKFsLost && mState == RECENTLY_LOST &&
-                                    (mSensor == System::IMU_MONOCULAR ||
-                                     mSensor == System::IMU_STEREO ||
-                                     mSensor == System::IMU_RGBD))))
+            if (bNeedKF &&
+                (bOK || (mParam.mInsertKFsLost && mState == RECENTLY_LOST &&
+                         (mSensor == System::IMU_MONOCULAR ||
+                          mSensor == System::IMU_STEREO ||
+                          mSensor == System::IMU_RGBD))))
                 CreateNewKeyFrame();
 
             // We allow points with high innovation (considererd outliers by the
@@ -978,20 +857,19 @@ void Tracking::StereoInitialization() {
                 return;
             }
 
-            if (!mFastInit && (mCurrentFrame.mpImuPreintegratedFrame->avgA -
-                               mLastFrame.mpImuPreintegratedFrame->avgA)
-                                      .norm() < 0.5) {
+            if (!mParam.mFastInit &&
+                (mCurrentFrame.mpImuPreintegratedFrame->avgA -
+                 mLastFrame.mpImuPreintegratedFrame->avgA)
+                        .norm() < 0.5) {
                 cout << "not enough acceleration" << endl;
                 return;
             }
 
             // IMUのデータが充分そろっているので、IMUについて初期化？する
-            if (mpImuPreintegratedFromLastKF)
-                delete mpImuPreintegratedFromLastKF;
-
-            mpImuPreintegratedFromLastKF =
-                new IMU::Preintegrated(IMU::Bias(), *mpImuCalib);
-            mCurrentFrame.mpImuPreintegrated = mpImuPreintegratedFromLastKF;
+            mPIntIMU.InitPreintegrationFromLastKF(IMU::Bias(),
+                                                  *mParam.mpImuCalib, true);
+            mCurrentFrame.mpImuPreintegrated =
+                mPIntIMU.mpImuPreintegratedFromLastKF;
         }
 
         // Set Frame pose to the origin (In case of inertial SLAM to imu)
@@ -1015,7 +893,7 @@ void Tracking::StereoInitialization() {
         mpAtlas->AddKeyFrame(pKFini);
 
         // Create MapPoints and asscoiate to KeyFrame
-        if (!mpCamera2) {
+        if (!mParam.mpCamera2) {
             for (int i = 0; i < mCurrentFrame.N; i++) {
                 float z = mCurrentFrame.mvDepth[i];
                 if (z > 0) {
@@ -1108,12 +986,10 @@ void Tracking::MonocularInitialization() {
 
             // IMUを使用している場合、IMUデータの初期化?も行う
             if (mSensor == System::IMU_MONOCULAR) {
-                if (mpImuPreintegratedFromLastKF) {
-                    delete mpImuPreintegratedFromLastKF;
-                }
-                mpImuPreintegratedFromLastKF =
-                    new IMU::Preintegrated(IMU::Bias(), *mpImuCalib);
-                mCurrentFrame.mpImuPreintegrated = mpImuPreintegratedFromLastKF;
+                mPIntIMU.InitPreintegrationFromLastKF(IMU::Bias(),
+                                                      *mParam.mpImuCalib, true);
+                mCurrentFrame.mpImuPreintegrated =
+                    mPIntIMU.mpImuPreintegratedFromLastKF;
             }
 
             // 初期化の準備が整ったので、フラグを立てる。
@@ -1148,7 +1024,7 @@ void Tracking::MonocularInitialization() {
         vector<bool>
             vbTriangulated;  // Triangulated Correspondences (mvIniMatches)
 
-        if (mpCamera->ReconstructWithTwoViews(
+        if (mParam.mpCamera->ReconstructWithTwoViews(
                 mInitialFrame.mvKeysUn, mCurrentFrame.mvKeysUn, mvIniMatches,
                 Tcw, mvIniP3D, vbTriangulated)) {
             for (size_t i = 0, iend = mvIniMatches.size(); i < iend; i++) {
@@ -1258,10 +1134,10 @@ void Tracking::CreateInitialMapMonocular() {
     if (mSensor == System::IMU_MONOCULAR) {
         pKFcur->mPrevKF = pKFini;
         pKFini->mNextKF = pKFcur;
-        pKFcur->mpImuPreintegrated = mpImuPreintegratedFromLastKF;
-
-        mpImuPreintegratedFromLastKF = new IMU::Preintegrated(
-            pKFcur->mpImuPreintegrated->GetUpdatedBias(), pKFcur->mImuCalib);
+        pKFcur->mpImuPreintegrated = mPIntIMU.mpImuPreintegratedFromLastKF;
+        mPIntIMU.InitPreintegrationFromLastKF(
+            pKFcur->mpImuPreintegrated->GetUpdatedBias(), pKFcur->mImuCalib,
+            false);
     }
 
     mpLocalMapper->InsertKeyFrame(pKFini);
@@ -1328,11 +1204,9 @@ void Tracking::CreateMapInAtlas() {
     }
 
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
-         mSensor == System::IMU_RGBD) &&
-        mpImuPreintegratedFromLastKF) {
-        delete mpImuPreintegratedFromLastKF;
-        mpImuPreintegratedFromLastKF =
-            new IMU::Preintegrated(IMU::Bias(), *mpImuCalib);
+         mSensor == System::IMU_RGBD)) {
+        mPIntIMU.InitPreintegrationFromLastKF(IMU::Bias(), *mParam.mpImuCalib,
+                                              true);
     }
 
     if (mpLastKeyFrame) mpLastKeyFrame = static_cast<KeyFrame *>(NULL);
@@ -1471,7 +1345,7 @@ void Tracking::UpdateLastFrame() {
             nPoints++;
         }
 
-        if (vDepthIdx[j].first > mThDepth && nPoints > 100) break;
+        if (vDepthIdx[j].first > mParam.mThDepth && nPoints > 100) break;
     }
 }
 
@@ -1633,7 +1507,7 @@ bool Tracking::TrackLocalMap() {
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     mpLocalMapper->mnMatchesInliers = mnMatchesInliers;
-    if (mCurrentFrame.mnId < mnLastRelocFrameId + mMaxFrames &&
+    if (mCurrentFrame.mnId < mnLastRelocFrameId + mParam.mMaxFrames &&
         mnMatchesInliers < 50)
         return false;
 
@@ -1685,8 +1559,8 @@ bool Tracking::NeedNewKeyFrame() {
 
     // Do not insert keyframes if not enough frames have passed from last
     // relocalisation
-    if (mCurrentFrame.mnId < mnLastRelocFrameId + mMaxFrames &&
-        nKFs > mMaxFrames) {
+    if (mCurrentFrame.mnId < mnLastRelocFrameId + mParam.mMaxFrames &&
+        nKFs > mParam.mMaxFrames) {
         return false;
     }
 
@@ -1708,7 +1582,7 @@ bool Tracking::NeedNewKeyFrame() {
             (mCurrentFrame.Nleft == -1) ? mCurrentFrame.N : mCurrentFrame.Nleft;
         for (int i = 0; i < N; i++) {
             if (mCurrentFrame.mvDepth[i] > 0 &&
-                mCurrentFrame.mvDepth[i] < mThDepth) {
+                mCurrentFrame.mvDepth[i] < mParam.mThDepth) {
                 if (mCurrentFrame.mvpMapPoints[i] &&
                     !mCurrentFrame.mvbOutlier[i])
                     nTrackedClose++;
@@ -1727,7 +1601,7 @@ bool Tracking::NeedNewKeyFrame() {
 
     if (mSensor == System::MONOCULAR) thRefRatio = 0.9f;
 
-    if (mpCamera2) thRefRatio = 0.75f;
+    if (mParam.mpCamera2) thRefRatio = 0.75f;
 
     if (mSensor == System::IMU_MONOCULAR) {
         if (mnMatchesInliers > 350)  // Points tracked from the local map
@@ -1738,10 +1612,10 @@ bool Tracking::NeedNewKeyFrame() {
 
     // Condition 1a: More than "MaxFrames" have passed from last keyframe
     // insertion
-    const bool c1a = mCurrentFrame.mnId >= mnLastKeyFrameId + mMaxFrames;
+    const bool c1a = mCurrentFrame.mnId >= mnLastKeyFrameId + mParam.mMaxFrames;
     // Condition 1b: More than "MinFrames" have passed and Local Mapping is idle
     const bool c1b =
-        ((mCurrentFrame.mnId >= mnLastKeyFrameId + mMinFrames) &&
+        ((mCurrentFrame.mnId >= mnLastKeyFrameId + mParam.mMinFrames) &&
          bLocalMappingIdle);  // mpLocalMapper->KeyframesInQueue() < 2);
     // Condition 1c: tracking is weak
     const bool c1c =
@@ -1820,8 +1694,8 @@ void Tracking::CreateNewKeyFrame() {
     // Reset preintegration from last KF (Create new object)
     if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
         mSensor == System::IMU_RGBD) {
-        mpImuPreintegratedFromLastKF =
-            new IMU::Preintegrated(pKF->GetImuBias(), pKF->mImuCalib);
+        mPIntIMU.InitPreintegrationFromLastKF(pKF->GetImuBias(), pKF->mImuCalib,
+                                              false);
     }
 
     if (mSensor != System::MONOCULAR &&
@@ -1904,7 +1778,8 @@ void Tracking::CreateNewKeyFrame() {
                     nPoints++;
                 }
 
-                if (vDepthIdx[j].first > mThDepth && nPoints > maxPoint) {
+                if (vDepthIdx[j].first > mParam.mThDepth &&
+                    nPoints > maxPoint) {
                     break;
                 }
             }
@@ -2463,43 +2338,6 @@ void Tracking::ResetActiveMap(bool bLocMap) {
 
 vector<MapPoint *> Tracking::GetLocalMapMPS() { return mvpLocalMapPoints; }
 
-void Tracking::ChangeCalibration(const string &strSettingPath) {
-    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
-    float fx = fSettings["Camera.fx"];
-    float fy = fSettings["Camera.fy"];
-    float cx = fSettings["Camera.cx"];
-    float cy = fSettings["Camera.cy"];
-
-    mK_.setIdentity();
-    mK_(0, 0) = fx;
-    mK_(1, 1) = fy;
-    mK_(0, 2) = cx;
-    mK_(1, 2) = cy;
-
-    cv::Mat K = cv::Mat::eye(3, 3, CV_32F);
-    K.at<float>(0, 0) = fx;
-    K.at<float>(1, 1) = fy;
-    K.at<float>(0, 2) = cx;
-    K.at<float>(1, 2) = cy;
-    K.copyTo(mK);
-
-    cv::Mat DistCoef(4, 1, CV_32F);
-    DistCoef.at<float>(0) = fSettings["Camera.k1"];
-    DistCoef.at<float>(1) = fSettings["Camera.k2"];
-    DistCoef.at<float>(2) = fSettings["Camera.p1"];
-    DistCoef.at<float>(3) = fSettings["Camera.p2"];
-    const float k3 = fSettings["Camera.k3"];
-    if (k3 != 0) {
-        DistCoef.resize(5);
-        DistCoef.at<float>(4) = k3;
-    }
-    DistCoef.copyTo(mDistCoef);
-
-    mbf = fSettings["Camera.bf"];
-
-    Frame::mbInitialComputations = true;
-}
-
 void Tracking::InformOnlyTracking(const bool &flag) { mbOnlyTracking = flag; }
 
 void Tracking::UpdateFrameIMU(const float s, const IMU::Bias &b,
@@ -2605,7 +2443,7 @@ void Tracking::SaveSubTrajectory(string strNameFile_frames,
         mpSystem->SaveKeyFrameTrajectoryEuRoC(strNameFile_kf, pMap);
 }
 
-float Tracking::GetImageScale() { return mImageScale; }
+float Tracking::GetImageScale() { return mParam.mImageScale; }
 
 #ifdef REGISTER_LOOP
 void Tracking::RequestStop() {

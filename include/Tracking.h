@@ -25,21 +25,20 @@
 #include <mutex>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
-#include <unordered_set>
 
 #include "Atlas.h"
 #include "Frame.h"
 #include "FrameDrawer.h"
-#include "GeometricCamera.h"
 #include "ImuTypes.h"
 #include "KeyFrameDatabase.h"
 #include "LocalMapping.h"
 #include "LoopClosing.h"
 #include "MapDrawer.h"
 #include "ORBVocabulary.h"
-#include "ORBextractor.h"
 #include "Settings.h"
 #include "System.h"
+#include "Tracking/ParameterManager.h"
+#include "Tracking/PreintegrateIMU.h"
 #include "Viewer.h"
 
 namespace ORB_SLAM3 {
@@ -79,11 +78,6 @@ public:
     void SetViewer(Viewer* pViewer);
     void SetStepByStep(bool bSet);
     bool GetStepByStep();
-
-    // Load new settings
-    // The focal lenght should be similar or scale prediction will fail when
-    // projecting points
-    void ChangeCalibration(const string& strSettingPath);
 
     // Use this function if you have deactivated local mapping and you only want
     // to localize the camera.
@@ -171,7 +165,6 @@ public:
     double t0;     // time-stamp of first read frame
     double t0vis;  // time-stamp of first inserted keyframe
     double t0IMU;  // time-stamp of IMU initialization
-    bool mFastInit = false;
 
     vector<MapPoint*> GetLocalMapMPS();
 
@@ -213,10 +206,13 @@ protected:
     // Reset IMU biases and compute frame velocity
     void ResetFrameIMU();
 
-    bool mbMapUpdated;
+    /// Manage parameters from Settings.
+    tracking::ParameterManager mParam;
 
-    // Imu preintegration from last frame
-    IMU::Preintegrated* mpImuPreintegratedFromLastKF;
+    /// Track preintegration of IMU.
+    tracking::PreintegrateIMU mPIntIMU;
+
+    bool mbMapUpdated;
 
     // Queue of IMU measurements between frames
     std::list<IMU::Point> mlQueueImuData;
@@ -225,9 +221,6 @@ protected:
     // by PreintegrateIMU)
     std::vector<IMU::Point> mvImuFromLastFrame;
     std::mutex mMutexImuQueue;
-
-    // Imu calibration parameters
-    IMU::Calib* mpImuCalib;
 
     // Last Bias Estimation (at keyframe creation)
     IMU::Bias mLastBias;
@@ -242,10 +235,6 @@ protected:
     // Other Thread Pointers
     LocalMapping* mpLocalMapper;
     LoopClosing* mpLoopClosing;
-
-    // ORB
-    ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
-    ORBextractor* mpIniORBextractor;
 
     // BoW
     ORBVocabulary* mpORBVocabulary;
@@ -272,33 +261,8 @@ protected:
     // Atlas
     Atlas* mpAtlas;
 
-    // Calibration matrix
-    cv::Mat mK;
-    Eigen::Matrix3f mK_;
-    cv::Mat mDistCoef;
-    float mbf;
-    float mImageScale;
-
-    float mImuFreq;
-    double mImuPer;
-    bool mInsertKFsLost;
-
-    // New KeyFrame rules (according to fps)
-    int mMinFrames;
-    int mMaxFrames;
-
     int mnFirstImuFrameId;
     int mnFramesToResetIMU;
-
-    // Threshold close/far points
-    // Points seen as close by the stereo/RGBD sensor are considered reliable
-    // and inserted from just one frame. Far points requiere a match in two
-    // keyframes.
-    float mThDepth;
-
-    // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values
-    // are scaled.
-    float mDepthMapFactor;
 
     // Current matches in frame
     int mnMatchesInliers;
@@ -320,9 +284,6 @@ protected:
     bool mbVelocity{false};
     Sophus::SE3f mVelocity;
 
-    // Color order (true RGB, false BGR, ignored if grayscale)
-    bool mbRGB;
-
     list<MapPoint*> mlpTemporalPoints;
 
     // int nMapChangeIndex;
@@ -337,13 +298,7 @@ protected:
     double mTime_LocalMapTrack;
     double mTime_NewKF_Dec;
 
-    GeometricCamera *mpCamera, *mpCamera2;
-
     int initID, lastID;
-
-    Sophus::SE3f mTlr;
-
-    void newParameterLoader(Settings* settings);
 
 public:
     cv::Mat mImRight;
