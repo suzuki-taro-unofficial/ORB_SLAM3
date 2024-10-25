@@ -57,15 +57,10 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer,
              MapDrawer* pMapDrawer, Atlas* pAtlas, KeyFrameDatabase* pKFDB,
-             const string& strSettingPath, const int sensor, Settings* settings,
+             const int sensor, Settings* settings,
              const string& _nameSeq = std::string());
 
     ~Tracking();
-
-    // Parse the config file
-    bool ParseCamParamFile(cv::FileStorage& fSettings);
-    bool ParseORBParamFile(cv::FileStorage& fSettings);
-    bool ParseIMUParamFile(cv::FileStorage& fSettings);
 
     // Preprocess the input and call Track(). Extract features and performs
     // stereo matching.

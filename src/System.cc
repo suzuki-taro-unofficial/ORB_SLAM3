@@ -95,16 +95,8 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
         cout << (*settings_) << endl;
     } else {
-        settings_ = nullptr;
-        cv::FileNode node = fsSettings["System.LoadAtlasFromFile"];
-        if (!node.empty() && node.isString()) {
-            mStrLoadAtlasFromFile = (string)node;
-        }
-
-        node = fsSettings["System.SaveAtlasToFile"];
-        if (!node.empty() && node.isString()) {
-            mStrSaveAtlasToFile = (string)node;
-        }
+        cerr << "Settings file not compatible" << endl;
+        exit(-1);
     }
 
     node = fsSettings["loopClosing"];
@@ -158,15 +150,15 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
     // Create Drawers. These are used by the Viewer
     mpFrameDrawer = new FrameDrawer(mpAtlas);
-    mpMapDrawer = new MapDrawer(mpAtlas, strSettingsFile, settings_);
+    mpMapDrawer = new MapDrawer(mpAtlas, settings_);
 
     // Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this
     // constructor)
     cout << "Seq. Name: " << strSequence << endl;
-    mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpAtlas, mpKeyFrameDatabase, strSettingsFile,
-                             mSensor, settings_, strSequence);
+    mpTracker =
+        new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer, mpAtlas,
+                     mpKeyFrameDatabase, mSensor, settings_, strSequence);
 
     // Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(
@@ -204,8 +196,8 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
     // Initialize the Viewer thread and launch
     if (bUseViewer) {
-        mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker,
-                              strSettingsFile, settings_);
+        mpViewer =
+            new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, settings_);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
         mpLoopCloser->mpViewer = mpViewer;
