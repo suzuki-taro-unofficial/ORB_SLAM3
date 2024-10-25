@@ -293,12 +293,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
             mnLoopNumNotFound++;
             if (mnLoopNumNotFound >= 2) {
-                mpLoopLastCurrentKF->SetErase();
-                mpLoopMatchedKF->SetErase();
-                mnLoopNumCoincidences = 0;
-                mvpLoopMatchedMPs.clear();
-                mvpLoopMPs.clear();
-                mnLoopNumNotFound = 0;
+                ResetLoopVariable();
             }
         }
     }
@@ -335,12 +330,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
             mnMergeNumNotFound++;
             if (mnMergeNumNotFound >= 2) {
-                mpMergeLastCurrentKF->SetErase();
-                mpMergeMatchedKF->SetErase();
-                mnMergeNumCoincidences = 0;
-                mvpMergeMatchedMPs.clear();
-                mvpMergeMPs.clear();
-                mnMergeNumNotFound = 0;
+                ResetMergeVariable();
             }
         }
     }
