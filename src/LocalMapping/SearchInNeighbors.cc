@@ -3,67 +3,8 @@
 #include "ORBmatcher.h"
 
 namespace ORB_SLAM3 {
-
-void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame) {
-    const vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
-    for (auto pKFi : vpNeighKFs) {
-        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) continue;
-        vpTargetKFs.push_back(pKFi);
-        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
-    }
-}
-
-void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA) {
-    // Add some covisible of covisible
-    // Extend to some second neighbors if abort is not requested
-    for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
-        const vector<KeyFrame*> vpSecondNeighKFs = vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
-        for (auto pKFi2 : vpSecondNeighKFs) {
-            if (pKFi2->isBad() || pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
-                pKFi2->mnId == mpCurrentKeyFrame->mnId)
-                continue;
-            vpTargetKFs.push_back(pKFi2);
-            pKFi2->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
-        }
-        if (mbAbortBA) break;
-    }
-}
-
-void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame) {
-    // Extend to temporal neighbors
-    KeyFrame* pKFi = mpCurrentKeyFrame->mPrevKF;
-    while (vpTargetKFs.size() < 20 && pKFi) {
-        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) {
-            pKFi = pKFi->mPrevKF;
-            continue;
-        }
-        vpTargetKFs.push_back(pKFi);
-        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
-        pKFi = pKFi->mPrevKF;
-    }
-}
-
-/**
- * CurrentKeyFrameからCovisibilityGraphでつながっているKFなどを取得する。
- *
- * SearchInNeighborsから切り出した
- */
 std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame* mpCurrentKeyFrame,
-                                               const bool& mbAbortBA, const bool& mbInertial) {
-    // Retrieve neighbor keyframes
-    int nn = 10;
-    if (mbMonocular) nn = 30;
-
-    vector<KeyFrame*> vpTargetKFs;
-
-    getFromCovisible(vpTargetKFs, nn, mpCurrentKeyFrame);
-    getFromCovisibleOfCovisible(vpTargetKFs, mpCurrentKeyFrame, mbAbortBA);
-    if (mbInertial) {
-        getFromPrevKF(vpTargetKFs, mpCurrentKeyFrame);
-    }
-
-    return vpTargetKFs;
-}
+                                               const bool& mbAbortBA, const bool& mbInertial);
 
 void LocalMapping::SearchInNeighbors() {
     vector<KeyFrame*> vpTargetKFs = GetNeighbors(mbMonocular, mpCurrentKeyFrame, mbAbortBA, mbInertial);
@@ -110,4 +51,70 @@ void LocalMapping::SearchInNeighbors() {
     // Update connections in covisibility graph
     mpCurrentKeyFrame->UpdateConnections();
 }
+
+void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame);
+void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA);
+void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame);
+
+/**
+ * CurrentKeyFrameからCovisibilityGraphでつながっているKFなどを取得する。
+ *
+ * SearchInNeighborsから切り出した
+ */
+std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame* mpCurrentKeyFrame,
+                                               const bool& mbAbortBA, const bool& mbInertial) {
+    // Retrieve neighbor keyframes
+    int nn = 10;
+    if (mbMonocular) nn = 30;
+
+    vector<KeyFrame*> vpTargetKFs;
+
+    getFromCovisible(vpTargetKFs, nn, mpCurrentKeyFrame);
+    getFromCovisibleOfCovisible(vpTargetKFs, mpCurrentKeyFrame, mbAbortBA);
+    if (mbInertial) {
+        getFromPrevKF(vpTargetKFs, mpCurrentKeyFrame);
+    }
+
+    return vpTargetKFs;
+}
+
+void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame) {
+    const vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
+    for (auto pKFi : vpNeighKFs) {
+        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) continue;
+        vpTargetKFs.push_back(pKFi);
+        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
+    }
+}
+
+void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA) {
+    // Add some covisible of covisible
+    // Extend to some second neighbors if abort is not requested
+    for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
+        const vector<KeyFrame*> vpSecondNeighKFs = vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
+        for (auto pKFi2 : vpSecondNeighKFs) {
+            if (pKFi2->isBad() || pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
+                pKFi2->mnId == mpCurrentKeyFrame->mnId)
+                continue;
+            vpTargetKFs.push_back(pKFi2);
+            pKFi2->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
+        }
+        if (mbAbortBA) break;
+    }
+}
+
+void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame) {
+    // Extend to temporal neighbors
+    KeyFrame* pKFi = mpCurrentKeyFrame->mPrevKF;
+    while (vpTargetKFs.size() < 20 && pKFi) {
+        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) {
+            pKFi = pKFi->mPrevKF;
+            continue;
+        }
+        vpTargetKFs.push_back(pKFi);
+        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
+        pKFi = pKFi->mPrevKF;
+    }
+}
+
 }  // namespace ORB_SLAM3
