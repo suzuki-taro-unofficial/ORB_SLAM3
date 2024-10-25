@@ -8,8 +8,10 @@ void LocalMapping::CreateNewMapPoints() {
     int nn = 10;
     // For stereo inertial case
     if (mbMonocular) nn = 30;
-    vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
 
+    vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
+    // prevKFを探索していってvpNeighKFsに含まれていたらvpNeighKFsに追加する。
+    // つまりダブりを生んでる。意図は良くわからない
     if (mbInertial) {
         KeyFrame* pKF = mpCurrentKeyFrame;
         int count = 0;
