@@ -244,11 +244,6 @@ protected:
     vector<double> vdPR_MatchedTime;
     vector<int> vnPR_TypeRecogn;
 
-    // DEBUG
-    string mstrFolderSubTraj;
-    int mnNumCorrection;
-    int mnCorrectionGBA;
-
     // To (de)activate LC
     bool mbActiveLC = true;
 

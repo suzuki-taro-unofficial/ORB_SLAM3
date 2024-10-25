@@ -59,10 +59,6 @@ LoopClosing::LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB,
       mbActiveLC(bActiveLC) {
     mnCovisibilityConsistencyTh = 3;
     mpLastCurrentKF = static_cast<KeyFrame*>(NULL);
-
-    mstrFolderSubTraj = "SubTrajectories/";
-    mnNumCorrection = 0;
-    mnCorrectionGBA = 0;
 }
 
 void LoopClosing::SetTracker(Tracking* pTracker) { mpTracker = pTracker; }
@@ -202,8 +198,6 @@ void LoopClosing::Run() {
                         mvpLoopMapPoints = mvpLoopMPs;
 
                         CorrectLoop();
-
-                        mnNumCorrection += 1;
                     }
 
                     ResetLoopVariable();
@@ -1057,7 +1051,6 @@ void LoopClosing::CorrectLoop() {
         mbRunningGBA = true;
         mbFinishedGBA = false;
         mbStopGBA = false;
-        mnCorrectionGBA = mnNumCorrection;
 
         mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment, this,
                                  pLoopMap, mpCurrentKF->mnId);
