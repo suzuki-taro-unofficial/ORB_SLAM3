@@ -37,14 +37,8 @@ void LocalMapping::CreateNewMapPoints() {
     const float& fy1 = mpCurrentKeyFrame->fy;
     const float& cx1 = mpCurrentKeyFrame->cx;
     const float& cy1 = mpCurrentKeyFrame->cy;
-    const float& invfx1 = mpCurrentKeyFrame->invfx;
-    const float& invfy1 = mpCurrentKeyFrame->invfy;
 
     const float ratioFactor = 1.5f * mpCurrentKeyFrame->mfScaleFactor;
-    int countStereo = 0;
-    int countStereoGoodProj = 0;
-    int countStereoAttempt = 0;
-    int totalStereoPts = 0;
     // Search matches with epipolar restriction and triangulate
     for (size_t i = 0; i < vpNeighKFs.size(); i++) {
         if (i > 0 && CheckNewKeyFrames()) return;
@@ -85,8 +79,6 @@ void LocalMapping::CreateNewMapPoints() {
         const float& fy2 = pKF2->fy;
         const float& cx2 = pKF2->cx;
         const float& cy2 = pKF2->cy;
-        const float& invfx2 = pKF2->invfx;
-        const float& invfy2 = pKF2->invfy;
 
         // Triangulate each match
         const int nmatches = vMatchedIndices.size();
@@ -176,32 +168,23 @@ void LocalMapping::CreateNewMapPoints() {
             else if (bStereo2)
                 cosParallaxStereo2 = cos(2 * atan2(pKF2->mb / 2, pKF2->mvDepth[idx2]));
 
-            if (bStereo1 || bStereo2) totalStereoPts++;
-
             cosParallaxStereo = min(cosParallaxStereo1, cosParallaxStereo2);
 
             Eigen::Vector3f x3D;
 
             bool goodProj = false;
-            bool bPointStereo = false;
             if (cosParallaxRays < cosParallaxStereo && cosParallaxRays > 0 &&
                 (bStereo1 || bStereo2 || (cosParallaxRays < 0.9996 && mbInertial) ||
                  (cosParallaxRays < 0.9998 && !mbInertial))) {
                 goodProj = GeometricTools::Triangulate(xn1, xn2, eigTcw1, eigTcw2, x3D);
                 if (!goodProj) continue;
             } else if (bStereo1 && cosParallaxStereo1 < cosParallaxStereo2) {
-                countStereoAttempt++;
-                bPointStereo = true;
                 goodProj = mpCurrentKeyFrame->UnprojectStereo(idx1, x3D);
             } else if (bStereo2 && cosParallaxStereo2 < cosParallaxStereo1) {
-                countStereoAttempt++;
-                bPointStereo = true;
                 goodProj = pKF2->UnprojectStereo(idx2, x3D);
             } else {
                 continue;  // No stereo and very low parallax
             }
-
-            if (goodProj && bPointStereo) countStereoGoodProj++;
 
             if (!goodProj) continue;
 
@@ -274,7 +257,6 @@ void LocalMapping::CreateNewMapPoints() {
 
             // Triangulation is succesfull
             MapPoint* pMP = new MapPoint(x3D, mpCurrentKeyFrame, mpAtlas->GetCurrentMap());
-            if (bPointStereo) countStereo++;
 
             pMP->AddObservation(mpCurrentKeyFrame, idx1);
             pMP->AddObservation(pKF2, idx2);
