@@ -25,7 +25,6 @@
 
 #include "GeometricTools.h"
 #include "LoopClosing.h"
-#include "ORBmatcher.h"
 #include "Optimizer.h"
 
 namespace ORB_SLAM3 {
