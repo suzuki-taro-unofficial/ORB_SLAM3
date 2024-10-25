@@ -31,7 +31,6 @@
 #include "KeyFrameDatabase.h"
 #include "LocalMapping.h"
 #include "ORBVocabulary.h"
-#include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 #include "Tracking.h"
 
 namespace ORB_SLAM3 {
@@ -217,7 +216,6 @@ protected:
     int mnMergeNumNotFound;
     KeyFrame* mpMergeLastCurrentKF;
     g2o::Sim3 mg2oMergeSlw;
-    g2o::Sim3 mg2oMergeSmw;
     g2o::Sim3 mg2oMergeScw;
     KeyFrame* mpMergeMatchedKF;
     std::vector<MapPoint*> mvpMergeMPs;

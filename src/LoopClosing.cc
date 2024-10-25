@@ -133,8 +133,6 @@ void LoopClosing::Run() {
                             }
                         }
 
-                        mg2oMergeSmw = gSmw2 * gSw2c * gScw1;
-
                         mg2oMergeScw = mg2oMergeSlw;
 
                         Verbose::PrintMess("*Merge detected",
@@ -2058,6 +2056,7 @@ void LoopClosing::RequestFinish() {
     mbFinishRequested = true;
 }
 
+// added
 void LoopClosing::ResetLoopVariable() {
     mpLoopLastCurrentKF->SetErase();
     mpLoopMatchedKF->SetErase();
@@ -2068,6 +2067,7 @@ void LoopClosing::ResetLoopVariable() {
     mbLoopDetected = false;
 }
 
+// added
 void LoopClosing::ResetMergeVariable() {
     mpMergeLastCurrentKF->SetErase();
     mpMergeMatchedKF->SetErase();
