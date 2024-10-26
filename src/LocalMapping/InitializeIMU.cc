@@ -3,7 +3,9 @@
 
 namespace ORB_SLAM3 {
 /**
- *InitializeIMUから切り出し
+ * InitializeIMUから切り出し
+ * KFをprevKFで追っていって、古いものを先頭にした結果を返す
+ * prevKFはMapの切り替わりで途切れる
  */
 vector<KeyFrame*> RetrieveAllKFinTemporalOrder(KeyFrame* kf) {
     list<KeyFrame*> lpKF;
@@ -34,6 +36,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
     // KFが少なすぎるか、経過時間が短すぎるなら処理をしない
     if (vpKF.size() < nMinKF) return;
+    // SystemやTrackingが使う
+    // Mapで一番古いKFの時間が入る。
     mFirstTs = vpKF.front()->mTimeStamp;
     if (mpCurrentKeyFrame->mTimeStamp - mFirstTs < minTime) return;
 

@@ -113,6 +113,11 @@ public:
     unsigned int mInitSect;
     unsigned int mIdxInit;
     unsigned int mnKFs;
+    /// Mapで最初のKFの時間
+    /// - `InitializeIMU` を実行時に設定され、Systemが読み込む
+    /// - Mapの切り替わり時にTracking側からも設定される。
+    /// - 両者とも、Mapで最初のKFの時間を設定している。
+    /// - Trackingから設定される方が先なはず。
     double mFirstTs;
     int mnMatchesInliers;
 
