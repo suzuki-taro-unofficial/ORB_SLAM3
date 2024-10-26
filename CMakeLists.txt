@@ -28,5 +28,7 @@ find_package(realsense2)
 
 add_subdirectory(src)
 add_subdirectory(Thirdparty/g2o)
+add_subdirectory(Thirdparty/DBoW2)
+add_subdirectory(Thirdparty/Sophus)
 add_subdirectory(doc)
 add_subdirectory(Examples)
