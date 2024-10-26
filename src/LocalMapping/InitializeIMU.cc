@@ -24,15 +24,8 @@ vector<KeyFrame*> RetrieveAllKFinTemporalOrder(KeyFrame* kf) {
 void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     if (mbResetRequested) return;
 
-    float minTime;
-    int nMinKF;
-    if (mbMonocular) {
-        minTime = 2.0;
-        nMinKF = 10;
-    } else {
-        minTime = 1.0;
-        nMinKF = 10;
-    }
+    const float minTime = mbMonocular ? 2.0 : 1.0;
+    const int nMinKF = 10;
 
     if (mpAtlas->KeyFramesInMap() < nMinKF) return;
 
