@@ -1,5 +1,23 @@
 #!/usr/bin/bash
 
+function log {
+    local spec="$1"
+    local message="$2"
+
+    local time=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$time][$spec] $message"
+}
+
+function log_info {
+    local message="$1"
+    log "INFO" "$message"
+}
+
+function log_error {
+    local message="$1"
+    log "ERROR" "$message"
+}
+
 # Almost same as select, but return default value if only enter pressed.
 # $1: prompt message
 # $2: reference to list of options user select
@@ -46,12 +64,12 @@ function init_base {
     base_ref="./dataset"
 }
 
-function accept_method {
-    # TODO: Other method
-    local -n method_ref="$1"
+function accept_format {
+    # TODO: Other format
+    local -n format_ref="$1"
     local options=("EuRoC")
-    select_with_default "select method" options 0
-    method_ref="${options[$?]}"
+    select_with_default "select format" options 0
+    format_ref="${options[$?]}"
 }
 
 function accept_dataset {
@@ -97,13 +115,13 @@ function download_dataset {
 
     mkdir -p $base
     if [[ -f $zip_path ]]; then
-        echo "${dataset} already downloaded"
+        log_info "${dataset} already downloaded"
     else
-        echo "download ${dataset}"
+        log_info "download ${dataset}"
         if curl ${urls_ref[$dataset]} -# -o $zip_path; then
-            echo "download finished"
+            log_info "download finished"
         else
-            echo "download failed"
+            log_error "download failed"
             exit 1
         fi
     fi
@@ -117,13 +135,13 @@ function unzip_dataset {
     local unzip_path="${base}/${dataset}"
 
     if [[ -d $unzip_path ]]; then
-        echo "${dataset} already uncompressed"
+        log_info "${dataset} already uncompressed"
     else
-        echo "uncompress ${dataset}"
+        log_info "uncompress ${dataset}"
         if unzip $zip_path -d $unzip_path; then
-            echo "uncompression finished"
+            log_info "uncompression finished"
         else
-            echo "uncompression failed"
+            log_error "uncompression failed"
             exit 1
         fi
     fi
@@ -131,19 +149,21 @@ function unzip_dataset {
 
 function run_example {
     local base="$1"
-    local dataset="$2"
-    local inertial="$3"
-    local camera="$4"
+    local format="$2"
+    local dataset="$3"
+    local inertial="$4"
+    local camera="$5"
 
-    echo "running example"
-    echo "dataset: ${dataset}"
-    echo "inertial: ${inertial}"
-    echo "camera: ${camera}"
+    log_info "running example"
+    log_info "format: ${format}"
+    log_info "dataset: ${dataset}"
+    log_info "inertial: ${inertial}"
+    log_info "camera: ${camera}"
 
     local dataset_path="${base}/${dataset}"
     if [[ "${camera}" = "Stereo" ]]; then
         if "${inertial}"; then
-            echo "not supported yet"
+            log_error "not supported yet"
             return
         else
             trap : SIGSEGV
@@ -157,16 +177,16 @@ function run_example {
             trap - SIGSEGV
         fi
     elif [[ "${camera}" = "RGB-D" ]]; then
-        echo "not supported yet"
+        log_error "not supported yet"
         return
     elif [[ "${camera}" = "Monocular" ]]; then
-        echo "not supported yet"
+        log_error "not supported yet"
         return
     fi
 
-    echo "finished running example"
-    echo "latest example stdout log saved: example.out.log"
-    echo "latest example stderr log saved: example.err.log"
+    log_info "finished running example"
+    log_info "latest example stdout log saved: example.out.log"
+    log_info "latest example stderr log saved: example.err.log"
 }
 
 declare -A urls
@@ -175,8 +195,8 @@ init_urls urls
 declare base
 init_base base
 
-declare method
-accept_method method
+declare format
+accept_format format
 
 declare dataset
 accept_dataset dataset
@@ -189,4 +209,4 @@ accept_camera camera
 
 download_dataset $base $dataset urls
 unzip_dataset $base $dataset
-run_example $base $dataset $inertial $camera
+run_example $base $format $dataset $inertial $camera
