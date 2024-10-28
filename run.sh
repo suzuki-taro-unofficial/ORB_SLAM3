@@ -163,8 +163,15 @@ function run_example {
     local dataset_path="${base}/${dataset}"
     if [[ "${camera}" = "Stereo" ]]; then
         if "${inertial}"; then
-            log_error "not supported yet"
-            return
+            trap : SIGSEGV
+            ./build/Examples/Stereo-Inertial/stereo_inertial_euroc \
+                ./Vocabulary/ORBvoc.txt \
+                ./Examples/Stereo-Inertial/EuRoC.yaml \
+                $dataset_path \
+                ./Examples/Stereo-Inertial/EuRoC_TimeStamps/${dataset}.txt \
+                dataset-${dataset}-stereo-inertial \
+                > example.out.log 2> example.err.log
+            trap - SIGSEGV
         else
             trap : SIGSEGV
             ./build/Examples/Stereo/stereo_euroc \
@@ -177,11 +184,30 @@ function run_example {
             trap - SIGSEGV
         fi
     elif [[ "${camera}" = "RGB-D" ]]; then
-        log_error "not supported yet"
+        log_error "RGB-D doesn't support EuRoC"
         return
     elif [[ "${camera}" = "Monocular" ]]; then
-        log_error "not supported yet"
-        return
+        if "${inertial}"; then
+            trap : SIGSEGV
+            ./build/Examples/Monocular-Inertial/mono_inertial_euroc \
+                ./Vocabulary/ORBvoc.txt \
+                ./Examples/Monocular-Inertial/EuRoC.yaml \
+                $dataset_path \
+                ./Examples/Monocular-Inertial/EuRoC_TimeStamps/${dataset}.txt \
+                dataset-${dataset}-mono-inertial \
+                > example.out.log 2> example.err.log
+            trap - SIGSEGV
+        else
+            trap : SIGSEGV
+            ./build/Examples/Monocular/mono_euroc \
+                ./Vocabulary/ORBvoc.txt \
+                ./Examples/Monocular/EuRoC.yaml \
+                $dataset_path \
+                ./Examples/Monocular/EuRoC_TimeStamps/${dataset}.txt \
+                dataset-${dataset}-mono \
+                > example.out.log 2> example.err.log
+            trap - SIGSEGV
+        fi
     fi
 
     log_info "finished running example"
