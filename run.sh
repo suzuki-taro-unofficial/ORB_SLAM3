@@ -40,7 +40,7 @@ function select_with_default {
         len="${#options_ref[@]}"
         digits="${#len}"
         for i in "${!options_ref[@]}"; do
-            printf "%${digits}d) %s\n" "$((i+1))" "${options_ref[i]}"
+            printf "%${digits}d) %s\n" "$((i+1))" "${options_ref[i]}" 1>&2
         done
         read -p "${message} (default $((default+1))): " choice
         if [[ -z "$choice" ]]; then
