@@ -146,7 +146,7 @@ function run_example {
             echo "not supported yet"
             return
         else
-            trap SIGSEGV
+            trap : SIGSEGV
             ./build/Examples/Stereo/stereo_euroc \
                 ./Vocabulary/ORBvoc.txt \
                 ./Examples/Stereo/EuRoC.yaml \
@@ -154,6 +154,7 @@ function run_example {
                 ./Examples/Stereo/EuRoC_TimeStamps/${dataset}.txt \
                 dataset-${dataset}-stereo \
                 > example.out.log 2> example.err.log
+            trap - SIGSEGV
         fi
     elif [[ "${camera}" = "RGB-D" ]]; then
         echo "not supported yet"
