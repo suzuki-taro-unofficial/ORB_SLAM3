@@ -1,21 +1,31 @@
 #!/usr/bin/bash
 
-function log {
+function __log {
     local spec="$1"
     local message="$2"
 
+    readonly ESC=$(printf "\033")
     local time=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[$time][$spec] $message"
+
+    printf "[%s]" "$(date '+%Y-%m-%d %H:%M:%S')"
+    if [[ "$spec" = "INFO" ]]; then
+        printf "[${ESC}[34mINFO ${ESC}[m] "
+    else
+        printf "[${ESC}[31mERROR${ESC}[m] "
+    fi
+    echo "${message}"
 }
 
 function log_info {
     local message="$1"
-    log "INFO" "$message"
+    local ESC=$(printf "\033")
+    __log "INFO" "$message"
 }
 
 function log_error {
     local message="$1"
-    log "ERROR" "$message"
+    local ESC=$(printf "\033")
+    __log "ERROR" "$message"
 }
 
 # Almost same as select, but return default value if only enter pressed.
