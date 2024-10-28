@@ -27,18 +27,18 @@ function select_with_default {
 
 function init_urls {
     local -n urls_ref="$1"
-    local head="http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/"
-    urls_ref[MH01]="${head}machine_hall/MH_01_easy/MH_01_easy.zip"
-    urls_ref[MH02]="${head}machine_hall/MH_02_easy/MH_02_easy.zip"
-    urls_ref[MH03]="${head}machine_hall/MH_03_medium/MH_03_medium.zip"
-    urls_ref[MH04]="${head}machine_hall/MH_04_difficult/MH_04_difficult.zip"
-    urls_ref[MH05]="${head}machine_hall/MH_05_difficult/MH_05_difficult.zip"
-    urls_ref[V101]="${head}vicon_room1/V1_01_easy/V1_01_easy.zip"
-    urls_ref[V102]="${head}vicon_room1/V1_02_medium/V1_02_medium.zip"
-    urls_ref[V103]="${head}vicon_room1/V1_03_difficult/V1_03_difficult.zip"
-    urls_ref[V201]="${head}vicon_room1/V2_01_easy/V2_01_easy.zip"
-    urls_ref[V202]="${head}vicon_room1/V2_02_medium/V2_02_medium.zip"
-    urls_ref[V203]="${head}vicon_room1/V2_03_difficult/V2_03_difficult.zip"
+    local head="http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset"
+    urls_ref[MH01]="${head}/machine_hall/MH_01_easy/MH_01_easy.zip"
+    urls_ref[MH02]="${head}/machine_hall/MH_02_easy/MH_02_easy.zip"
+    urls_ref[MH03]="${head}/machine_hall/MH_03_medium/MH_03_medium.zip"
+    urls_ref[MH04]="${head}/machine_hall/MH_04_difficult/MH_04_difficult.zip"
+    urls_ref[MH05]="${head}/machine_hall/MH_05_difficult/MH_05_difficult.zip"
+    urls_ref[V101]="${head}/vicon_room1/V1_01_easy/V1_01_easy.zip"
+    urls_ref[V102]="${head}/vicon_room1/V1_02_medium/V1_02_medium.zip"
+    urls_ref[V103]="${head}/vicon_room1/V1_03_difficult/V1_03_difficult.zip"
+    urls_ref[V201]="${head}/vicon_room1/V2_01_easy/V2_01_easy.zip"
+    urls_ref[V202]="${head}/vicon_room1/V2_02_medium/V2_02_medium.zip"
+    urls_ref[V203]="${head}/vicon_room1/V2_03_difficult/V2_03_difficult.zip"
 }
 
 function init_base {
