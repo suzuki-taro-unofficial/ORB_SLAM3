@@ -45,7 +45,7 @@ function select_with_default {
         read -p "${message} (default $((default+1))): " choice
         if [[ -z "$choice" ]]; then
             return $default
-        elif [[ $choice =~ ^[0-9]+$ && $((choice-1)) -lt $len ]]; then
+        elif [[ $choice =~ ^[0-9]+$ && $((choice-1)) -lt $len && $((choice-1)) -ge 0 ]]; then
             return $((choice-1))
         else
             echo "invalid selection. try again."
