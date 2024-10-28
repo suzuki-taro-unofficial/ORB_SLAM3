@@ -9,7 +9,7 @@ function __log {
 
     printf "[%s]" "$(date '+%Y-%m-%d %H:%M:%S')"
     if [[ "$spec" = "INFO" ]]; then
-        printf "[${ESC}[34mINFO ${ESC}[m] "
+        printf "[${ESC}[34mINFO${ESC}[m] "
     else
         printf "[${ESC}[31mERROR${ESC}[m] "
     fi
