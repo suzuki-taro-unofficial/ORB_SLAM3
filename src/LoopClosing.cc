@@ -71,15 +71,7 @@ void LoopClosing::Run() {
     mbFinished = false;
 
     while (1) {
-        // NEW LOOP AND MERGE DETECTION ALGORITHM
-        //----------------------------
-
         if (CheckNewKeyFrames()) {
-            if (mpLastCurrentKF) {
-                mpLastCurrentKF->mvpLoopCandKFs.clear();
-                mpLastCurrentKF->mvpMergeCandKFs.clear();
-            }
-
             /// ループの検出およびマージの検出
             bool bFindedRegion = NewDetectCommonRegions();
 
