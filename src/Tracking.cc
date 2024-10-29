@@ -256,28 +256,28 @@ void Tracking::GrabImuData(const IMU::Point &imuMeasurement) {
 
 /// `in`にあるIMUデータのうち、`pCurrentFrame`と`pCurrentFrame->mpPrevFrame`の間にあるデータを`out`に格納する
 static void PopIMUDataFromQueueByCurrentFrame(
-    const Frame &currFrame, std::mutex &queueMutex,
+    const Frame &currFrame, std::mutex &inMutex,
     const tracking::ParameterManager &param, std::list<IMU::Point> &in,
     std::vector<IMU::Point> &out) {
     while (true) {
         bool bSleep = false;
         {
-            unique_lock<mutex> lock(queueMutex);
-            if (!in.empty()) {
-                IMU::Point *m = &in.front();
-                cout.precision(17);
-                if (m->t < currFrame.mpPrevFrame->mTimeStamp - param.mImuPer) {
-                    in.pop_front();
-                } else if (m->t < currFrame.mTimeStamp - param.mImuPer) {
-                    out.push_back(*m);
-                    in.pop_front();
-                } else {
-                    out.push_back(*m);
-                    break;
-                }
-            } else {
+            unique_lock<mutex> lock(inMutex);
+            if (in.empty()) {
                 break;
                 bSleep = true;
+            }
+
+            IMU::Point *m = &in.front();
+            cout.precision(17);
+            if (m->t < currFrame.mpPrevFrame->mTimeStamp - param.mImuPer) {
+                in.pop_front();
+            } else if (m->t < currFrame.mTimeStamp - param.mImuPer) {
+                out.push_back(*m);
+                in.pop_front();
+            } else {
+                out.push_back(*m);
+                break;
             }
         }
         if (bSleep) usleep(500);
@@ -298,20 +298,18 @@ static void PreintegrateIMU(Frame &currFrame, const Frame &lastFrame,
         Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
         currFrame.setIntegrated();
         return;
+    } else if (queueImuData.empty()) {
+        Verbose::PrintMess("Not IMU data in mlQueueImuData!!",
+                           Verbose::VERBOSITY_NORMAL);
+        currFrame.setIntegrated();
+        return;
     }
 
     // キューの中からデータを取り出し`mvImuFromLastFrame`に格納する
     vImuFromLastFrame.clear();
     vImuFromLastFrame.reserve(queueImuData.size());
-    if (queueImuData.size() == 0) {
-        Verbose::PrintMess("Not IMU data in mlQueueImuData!!",
-                           Verbose::VERBOSITY_NORMAL);
-        currFrame.setIntegrated();
-        return;
-    } else {
-        PopIMUDataFromQueueByCurrentFrame(currFrame, mutexImuQueue, param,
-                                          queueImuData, vImuFromLastFrame);
-    }
+    PopIMUDataFromQueueByCurrentFrame(currFrame, mutexImuQueue, param,
+                                      queueImuData, vImuFromLastFrame);
 
     if (vImuFromLastFrame.size() == 0) {
         cout << "Empty IMU measurements vector!!!\n";
