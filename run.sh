@@ -18,13 +18,11 @@ function __log {
 
 function log_info {
     local message="$1"
-    local ESC=$(printf "\033")
     __log "INFO" "$message"
 }
 
 function log_error {
     local message="$1"
-    local ESC=$(printf "\033")
     __log "ERROR" "$message"
 }
 
