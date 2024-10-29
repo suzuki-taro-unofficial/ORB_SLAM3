@@ -16,20 +16,16 @@ RUN apt install -y \
     doxygen graphviz \
     openssl \
     libssl-dev \
-    libpython2.7-dev \
-    # From Pangolin v0.8
-    libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev \
-    libc++-dev libglew-dev libeigen3-dev cmake g++ ninja-build \
-    libjpeg-dev libpng-dev \
-    libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev
+    libpython2.7-dev
 
-RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
+RUN git clone --recursive https://github.com/stevenlovegrove/Pangolin.git && \
     cd Pangolin && \
     git checkout v0.8 && \
+    yes | ./scripts/install_prerequisites.sh recommended && \
     mkdir build && \
     cd build && \
     cmake .. && \
     make -j && \
     sudo make install
 
-RUN sudo ldconfig && sudo ldconfig
+RUN sudo ldconfig
