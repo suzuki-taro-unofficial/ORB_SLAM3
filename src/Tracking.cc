@@ -127,6 +127,11 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft,
         }
     }
 
+    // TODO:
+    // mLastFrameの参照を取っているのが、現在の値を指し示す目的
+    // （つまり、mLastFrameが変化しても変化前の値を用いる目的）
+    // でやっているならバグな気がする。
+    // 実際、Frameの引数の名前がpPrevFだからバグってそう
     if (mSensor == System::STEREO && !mParam.mpCamera2)
         mCurrentFrame = Frame(
             mImGray, imGrayRight, timestamp, mParam.mpORBextractorLeft,
