@@ -98,3 +98,5 @@ borrar/*
 
 /dataset
 /*.log
+
+!Makefile
