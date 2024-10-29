@@ -100,3 +100,4 @@ borrar/*
 /*.log
 
 !Makefile
+!Dockerfile
