@@ -256,7 +256,7 @@ void Tracking::GrabImuData(const IMU::Point &imuMeasurement) {
 
 /// `in`にあるIMUデータのうち、`pCurrentFrame`と`pCurrentFrame->mpPrevFrame`の間にあるデータを`out`に格納する
 static void PopIMUDataFromQueueByCurrentFrame(
-    const Frame *pCurrentFrame, std::mutex &queueMutex,
+    const Frame &currFrame, std::mutex &queueMutex,
     const tracking::ParameterManager &param, std::list<IMU::Point> &in,
     std::vector<IMU::Point> &out) {
     while (true) {
@@ -266,10 +266,9 @@ static void PopIMUDataFromQueueByCurrentFrame(
             if (!in.empty()) {
                 IMU::Point *m = &in.front();
                 cout.precision(17);
-                if (m->t <
-                    pCurrentFrame->mpPrevFrame->mTimeStamp - param.mImuPer) {
+                if (m->t < currFrame.mpPrevFrame->mTimeStamp - param.mImuPer) {
                     in.pop_front();
-                } else if (m->t < pCurrentFrame->mTimeStamp - param.mImuPer) {
+                } else if (m->t < currFrame.mTimeStamp - param.mImuPer) {
                     out.push_back(*m);
                     in.pop_front();
                 } else {
@@ -310,7 +309,7 @@ static void PreintegrateIMU(Frame &currFrame, const Frame &lastFrame,
         currFrame.setIntegrated();
         return;
     } else {
-        PopIMUDataFromQueueByCurrentFrame(&currFrame, mutexImuQueue, param,
+        PopIMUDataFromQueueByCurrentFrame(currFrame, mutexImuQueue, param,
                                           queueImuData, vImuFromLastFrame);
     }
 
