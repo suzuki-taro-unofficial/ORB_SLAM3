@@ -370,15 +370,6 @@ bool LoopClosing::CheckSkipCondition() {
         return true;
     }
 
-    /// ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
-    if (mpTracker->mSensor == System::STEREO &&
-        mpLastMap->GetAllKeyFrames().size() < 5)  // 12
-    {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return true;
-    }
-
     /// キーフレームの数が12未満なら処理をスキップする。
     if (mpLastMap->GetAllKeyFrames().size() < 12) {
         mpKeyFrameDB->add(mpCurrentKF);
