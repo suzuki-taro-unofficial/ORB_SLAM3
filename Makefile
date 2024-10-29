@@ -2,23 +2,23 @@
 build:
 	@if [ ! -f "/.dockerenv" ]; then \
 		echo "please run this after make dev"; \
-		exit 1; \
+	else \
+		./scripts/build.sh; \
 	fi
-	./scripts/build.sh
 
 build_ros:
 	@if [ ! -f "/.dockerenv" ]; then \
 		echo "please run this after make dev"; \
-		exit 1; \
+	else \
+		./scripts/build_ros.sh; \
 	fi
-	./scripts/build_ros.sh
 
 run:
 	@if [ ! -f "/.dockerenv" ]; then \
 		echo "please run this after make dev"; \
-		exit 1; \
+	else \
+		./scripts/run.sh; \
 	fi
-	./scripts/run.sh
 
 dev:
 	./scripts/dev.sh
