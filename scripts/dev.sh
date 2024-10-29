@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ -z "$(sudo docker images -q orb-slam3-dev 2> /dev/null)" ]]; then
-    sudo docker build . -t orb-slam3-dev
+readonly image_name="orb-slam3-dev"
+
+if [[ -z "$(sudo docker images -q $image_name 2> /dev/null)" ]]; then
+    sudo docker build . -t $image_name
 fi
-sudo docker run -v .:/ORB_SLAM3 -i -t --rm orb-slam3-dev
+
+sudo docker run --rm -it \
+    -v .:/ORB_SLAM3 \
+    $image_name
