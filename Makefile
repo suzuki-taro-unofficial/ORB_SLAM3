@@ -21,4 +21,8 @@ run:
 	fi
 
 dev:
-	./scripts/dev.sh
+	@if [ -f "/.dockerenv" ]; then \
+		echo "make dev doesn't works inside docker"; \
+	else \
+		./scripts/dev.sh; \
+	fi
