@@ -4,7 +4,7 @@ function __log {
     local spec="$1"
     local message="$2"
 
-    readonly ESC=$(printf "\033")
+    local -r ESC=$(printf "\033")
     local time=$(date '+%Y-%m-%d %H:%M:%S')
 
     printf "[%s]" "$(date '+%Y-%m-%d %H:%M:%S')"
