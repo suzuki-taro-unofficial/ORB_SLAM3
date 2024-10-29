@@ -146,7 +146,7 @@ function unzip_dataset {
         log_info "${dataset} already uncompressed"
     else
         log_info "uncompress ${dataset}"
-        if unzip $zip_path -d $unzip_path; then
+        if unzip -qq $zip_path -d $unzip_path; then
             log_info "uncompression finished"
         else
             log_error "uncompression failed"
