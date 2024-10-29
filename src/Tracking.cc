@@ -285,28 +285,33 @@ static void PopIMUDataFromQueueByCurrentFrame(
     }
 }
 
-/// `mPIntIMU.Preintegrate`を実行する
-void Tracking::PreintegrateIMU() {
+/// currFrameとcurrFrame.mPrevFrameの間のIMUデータを事前積分してcurrFrameを更新する。
+static void PreintegrateIMU(Frame &currFrame, const Frame &lastFrame,
+                            KeyFrame *lastKF, std::mutex &mutexImuQueue,
+                            std::list<IMU::Point> &queueImuData,
+                            const tracking::ParameterManager &param,
+                            tracking::PreintegrateIMU &pintIMU) {
+    // TODO: lastFrameとcurrFrame.mpPrevFrameの違いは？
+
     static std::vector<IMU::Point> vImuFromLastFrame;
 
-    if (!mCurrentFrame.mpPrevFrame) {
+    if (!currFrame.mpPrevFrame) {
         Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
-        mCurrentFrame.setIntegrated();
+        currFrame.setIntegrated();
         return;
     }
 
     // キューの中からデータを取り出し`mvImuFromLastFrame`に格納する
     vImuFromLastFrame.clear();
-    vImuFromLastFrame.reserve(mlQueueImuData.size());
-    if (mlQueueImuData.size() == 0) {
+    vImuFromLastFrame.reserve(queueImuData.size());
+    if (queueImuData.size() == 0) {
         Verbose::PrintMess("Not IMU data in mlQueueImuData!!",
                            Verbose::VERBOSITY_NORMAL);
-        mCurrentFrame.setIntegrated();
+        currFrame.setIntegrated();
         return;
     } else {
-        PopIMUDataFromQueueByCurrentFrame(&mCurrentFrame, mMutexImuQueue,
-                                          mParam, mlQueueImuData,
-                                          vImuFromLastFrame);
+        PopIMUDataFromQueueByCurrentFrame(&currFrame, mutexImuQueue, param,
+                                          queueImuData, vImuFromLastFrame);
     }
 
     if (vImuFromLastFrame.size() == 0) {
@@ -314,14 +319,13 @@ void Tracking::PreintegrateIMU() {
         return;
     }
 
-    mPIntIMU.Preintegrate(vImuFromLastFrame, mLastFrame, mCurrentFrame);
+    pintIMU.Preintegrate(vImuFromLastFrame, lastFrame, currFrame);
 
-    mCurrentFrame.mpImuPreintegratedFrame =
-        mPIntIMU.mpImuPreintegratedFromLastFrame;
-    mCurrentFrame.mpImuPreintegrated = mPIntIMU.mpImuPreintegratedFromLastKF;
-    mCurrentFrame.mpLastKeyFrame = mpLastKeyFrame;
+    currFrame.mpImuPreintegratedFrame = pintIMU.mpImuPreintegratedFromLastFrame;
+    currFrame.mpImuPreintegrated = pintIMU.mpImuPreintegratedFromLastKF;
+    currFrame.mpLastKeyFrame = lastKF;
 
-    mCurrentFrame.setIntegrated();
+    currFrame.setIntegrated();
 }
 
 bool Tracking::PredictStateIMU() {
@@ -452,7 +456,8 @@ void Tracking::Track() {
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
          mSensor == System::IMU_RGBD) &&
         !mbCreatedMap) {
-        PreintegrateIMU();
+        PreintegrateIMU(mCurrentFrame, mLastFrame, mpLastKeyFrame,
+                        mMutexImuQueue, mlQueueImuData, mParam, mPIntIMU);
     }
     mbCreatedMap = false;
 
