@@ -590,7 +590,8 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
     } else {
         output << "Kannala-Brandt";
     }
-    output << ")" << ": [";
+    output << ")"
+           << ": [";
     for (size_t i = 0; i < settings.originalCalib1_->size(); i++) {
         output << " " << settings.originalCalib1_->getParameter(i);
     }
@@ -613,7 +614,8 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
         } else {
             output << "Kannala-Brandt";
         }
-        output << "" << ": [";
+        output << ""
+               << ": [";
         for (size_t i = 0; i < settings.originalCalib2_->size(); i++) {
             output << " " << settings.originalCalib2_->getParameter(i);
         }

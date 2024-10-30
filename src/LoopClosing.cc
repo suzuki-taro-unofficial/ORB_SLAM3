@@ -59,10 +59,6 @@ LoopClosing::LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB,
       mbActiveLC(bActiveLC) {
     mnCovisibilityConsistencyTh = 3;
     mpLastCurrentKF = static_cast<KeyFrame*>(NULL);
-
-    mstrFolderSubTraj = "SubTrajectories/";
-    mnNumCorrection = 0;
-    mnCorrectionGBA = 0;
 }
 
 void LoopClosing::SetTracker(Tracking* pTracker) { mpTracker = pTracker; }
@@ -75,38 +71,23 @@ void LoopClosing::Run() {
     mbFinished = false;
 
     while (1) {
-        // NEW LOOP AND MERGE DETECTION ALGORITHM
-        //----------------------------
-
         if (CheckNewKeyFrames()) {
-            if (mpLastCurrentKF) {
-                mpLastCurrentKF->mvpLoopCandKFs.clear();
-                mpLastCurrentKF->mvpMergeCandKFs.clear();
-            }
-
             /// ループの検出およびマージの検出
             bool bFindedRegion = NewDetectCommonRegions();
 
             if (bFindedRegion) {
                 if (mbMergeDetected) {
                     /// IMUを使用していてIMUが初期化されていない場合、処理を中断する。
-                    if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-                         mpTracker->mSensor == System::IMU_STEREO ||
-                         mpTracker->mSensor == System::IMU_RGBD) &&
+                    if (IsUseIMU() &&
                         (!mpCurrentKF->GetMap()->isImuInitialized())) {
                         cout << "IMU is not initilized, merge is aborted"
                              << endl;
                     } else {
-                        Sophus::SE3d mTmw =
-                            mpMergeMatchedKF->GetPose().cast<double>();
-                        g2o::Sim3 gSmw2(mTmw.unit_quaternion(),
-                                        mTmw.translation(), 1.0);
                         Sophus::SE3d mTcw =
                             mpCurrentKF->GetPose().cast<double>();
                         g2o::Sim3 gScw1(mTcw.unit_quaternion(),
                                         mTcw.translation(), 1.0);
                         g2o::Sim3 gSw2c = mg2oMergeSlw.inverse();
-                        g2o::Sim3 gSw1m = mg2oMergeSlw;
 
                         mSold_new = (gSw2c * gScw1);
 
@@ -117,22 +98,14 @@ void LoopClosing::Run() {
                                  << endl;
                             if (mSold_new.scale() < 0.90 ||
                                 mSold_new.scale() > 1.1) {
-                                mpMergeLastCurrentKF->SetErase();
-                                mpMergeMatchedKF->SetErase();
-                                mnMergeNumCoincidences = 0;
-                                mvpMergeMatchedMPs.clear();
-                                mvpMergeMPs.clear();
-                                mnMergeNumNotFound = 0;
-                                mbMergeDetected = false;
+                                ResetMergeVariable();
                                 Verbose::PrintMess(
                                     "scale bad estimated. Abort merging",
                                     Verbose::VERBOSITY_NORMAL);
                                 continue;
                             }
                             // If inertial, force only yaw
-                            if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-                                 mpTracker->mSensor == System::IMU_STEREO ||
-                                 mpTracker->mSensor == System::IMU_RGBD) &&
+                            if (IsUseIMU() &&
                                 mpCurrentKF->GetMap()->GetIniertialBA1()) {
                                 Eigen::Vector3d phi = LogSO3(
                                     mSold_new.rotation().toRotationMatrix());
@@ -143,8 +116,6 @@ void LoopClosing::Run() {
                             }
                         }
 
-                        mg2oMergeSmw = gSmw2 * gSw2c * gScw1;
-
                         mg2oMergeScw = mg2oMergeSlw;
 
                         Verbose::PrintMess("*Merge detected",
@@ -152,9 +123,7 @@ void LoopClosing::Run() {
 
                         /// マージの実行
                         // TODO UNCOMMENT
-                        if (mpTracker->mSensor == System::IMU_MONOCULAR ||
-                            mpTracker->mSensor == System::IMU_STEREO ||
-                            mpTracker->mSensor == System::IMU_RGBD)
+                        if (IsUseIMU())
                             MergeLocal2();
                         else
                             MergeLocal();
@@ -167,26 +136,10 @@ void LoopClosing::Run() {
                     vdPR_MatchedTime.push_back(mpMergeMatchedKF->mTimeStamp);
                     vnPR_TypeRecogn.push_back(1);
 
-                    // Reset all variables
-                    mpMergeLastCurrentKF->SetErase();
-                    mpMergeMatchedKF->SetErase();
-                    mnMergeNumCoincidences = 0;
-                    mvpMergeMatchedMPs.clear();
-                    mvpMergeMPs.clear();
-                    mnMergeNumNotFound = 0;
-                    mbMergeDetected = false;
+                    ResetMergeVariable();
 
                     /// マージした場合、ループの検出はリセットされる。
-                    if (mbLoopDetected) {
-                        // Reset Loop variables
-                        mpLoopLastCurrentKF->SetErase();
-                        mpLoopMatchedKF->SetErase();
-                        mnLoopNumCoincidences = 0;
-                        mvpLoopMatchedMPs.clear();
-                        mvpLoopMPs.clear();
-                        mnLoopNumNotFound = 0;
-                        mbLoopDetected = false;
-                    }
+                    if (mbLoopDetected) ResetLoopVariable();
                 }
 
                 /// ループのみが検出された場合の処理。
@@ -216,10 +169,7 @@ void LoopClosing::Run() {
                             fabs(phi(2)) < 0.349f) {
                             if (mpCurrentKF->GetMap()->IsInertial()) {
                                 // If inertial, force only yaw
-                                if ((mpTracker->mSensor ==
-                                         System::IMU_MONOCULAR ||
-                                     mpTracker->mSensor == System::IMU_STEREO ||
-                                     mpTracker->mSensor == System::IMU_RGBD) &&
+                                if (IsUseIMU() &&
                                     mpCurrentKF->GetMap()->GetIniertialBA2()) {
                                     phi(0) = 0;
                                     phi(1) = 0;
@@ -240,18 +190,9 @@ void LoopClosing::Run() {
                         mvpLoopMapPoints = mvpLoopMPs;
 
                         CorrectLoop();
-
-                        mnNumCorrection += 1;
                     }
 
-                    // Reset all variables
-                    mpLoopLastCurrentKF->SetErase();
-                    mpLoopMatchedKF->SetErase();
-                    mnLoopNumCoincidences = 0;
-                    mvpLoopMatchedMPs.clear();
-                    mvpLoopMPs.clear();
-                    mnLoopNumNotFound = 0;
-                    mbLoopDetected = false;
+                    ResetLoopVariable();
                 }
             }
             mpLastCurrentKF = mpCurrentKF;
@@ -282,8 +223,7 @@ bool LoopClosing::CheckNewKeyFrames() {
 }
 
 /**
- * ループキューに対してロック、キーフレームに副作用。
- *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
+ *マージとループの検出を行う。
  *検出できたらtrueを返す。
  */
 bool LoopClosing::NewDetectCommonRegions() {
@@ -291,37 +231,10 @@ bool LoopClosing::NewDetectCommonRegions() {
     // performed
     if (!mbActiveLC) return false;
 
-    /// キーフレームの取り出し
-    {
-        unique_lock<mutex> lock(mMutexLoopQueue);
-        mpCurrentKF = mlpLoopKeyFrameQueue.front();
-        mlpLoopKeyFrameQueue.pop_front();
-        // Avoid that a keyframe can be erased while it is being process by this
-        // thread
-        mpCurrentKF->SetNotErase();
-        mpCurrentKF->mbCurrentPlaceRecognition = true;
+    // キーフレームの取り出し
+    SetCurrentKF();
 
-        mpLastMap = mpCurrentKF->GetMap();
-    }
-
-    /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
-    if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return false;
-    }
-
-    /// ステレオカメラを使用していて、かつキーフレームの数が５未満のときは処理をスキップする。
-    if (mpTracker->mSensor == System::STEREO &&
-        mpLastMap->GetAllKeyFrames().size() < 5)  // 12
-    {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
-        return false;
-    }
-
-    /// キーフレームの数が12未満なら処理をスキップする。
-    if (mpLastMap->GetAllKeyFrames().size() < 12) {
+    if (CheckSkipCondition()) {
         mpKeyFrameDB->add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
@@ -330,10 +243,8 @@ bool LoopClosing::NewDetectCommonRegions() {
     // Check the last candidates with geometric validation
     //  Loop candidates
     bool bLoopDetectedInKF = false;
-    bool bCheckSpatial = false;
 
     if (mnLoopNumCoincidences > 0) {
-        bCheckSpatial = true;
         // Find from the last KF candidates
         Sophus::SE3d mTcl =
             (mpCurrentKF->GetPose() * mpLoopLastCurrentKF->GetPoseInverse())
@@ -342,7 +253,7 @@ bool LoopClosing::NewDetectCommonRegions() {
         g2o::Sim3 gScw = gScl * mg2oLoopSlw;
         int numProjMatches = 0;
         vector<MapPoint*> vpMatchedMPs;
-        /// 過去のキーフレームと一致する領域を検出する。
+        // 前回のキーフレームと一致するか見る。
         bool bCommonRegion = DetectAndReffineSim3FromLastKF(
             mpCurrentKF, mpLoopMatchedKF, gScw, numProjMatches, mvpLoopMPs,
             vpMatchedMPs);
@@ -355,7 +266,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oLoopSlw = gScw;
             mvpLoopMatchedMPs = vpMatchedMPs;
 
-            /// ループの候補が3つ以上見つかったらフラグを立てる。
+            // ループの候補が3つ以上見つかったらフラグを立てる。
             mbLoopDetected = mnLoopNumCoincidences >= 3;
             mnLoopNumNotFound = 0;
 
@@ -367,12 +278,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
             mnLoopNumNotFound++;
             if (mnLoopNumNotFound >= 2) {
-                mpLoopLastCurrentKF->SetErase();
-                mpLoopMatchedKF->SetErase();
-                mnLoopNumCoincidences = 0;
-                mvpLoopMatchedMPs.clear();
-                mvpLoopMPs.clear();
-                mnLoopNumNotFound = 0;
+                ResetLoopVariable();
             }
         }
     }
@@ -409,12 +315,7 @@ bool LoopClosing::NewDetectCommonRegions() {
 
             mnMergeNumNotFound++;
             if (mnMergeNumNotFound >= 2) {
-                mpMergeLastCurrentKF->SetErase();
-                mpMergeMatchedKF->SetErase();
-                mnMergeNumCoincidences = 0;
-                mvpMergeMatchedMPs.clear();
-                mvpMergeMPs.clear();
-                mnMergeNumNotFound = 0;
+                ResetMergeVariable();
             }
         }
     }
@@ -437,7 +338,7 @@ bool LoopClosing::NewDetectCommonRegions() {
                                             vpMergeBowCand, 3);
     }
 
-    /// 幾何学的候補が見つからないならBoWを用いてループ検出を行う。
+    // 初回とSim3で一致が見られないときはBoWを用いてループ検出を行う。
     // Check the BoW candidates if the geometric candidate list is empty
     // Loop candidates
     if (!bLoopDetectedInKF && !vpLoopBowCand.empty()) {
@@ -460,7 +361,21 @@ bool LoopClosing::NewDetectCommonRegions() {
     }
 
     mpCurrentKF->SetErase();
-    mpCurrentKF->mbCurrentPlaceRecognition = false;
+
+    return false;
+}
+
+// added
+bool LoopClosing::CheckSkipCondition() {
+    /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
+    if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
+        return true;
+    }
+
+    /// キーフレームの数が12未満なら処理をスキップする。
+    if (mpLastMap->GetAllKeyFrames().size() < 12) {
+        return true;
+    }
 
     return false;
 }
@@ -592,7 +507,6 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
             std::vector<KeyFrame*>(mpCurrentKF->GetMapPointMatches().size(),
                                    static_cast<KeyFrame*>(NULL));
 
-        int nIndexMostBoWMatchesKF = 0;
         for (int j = 0; j < vpCovKFi.size(); ++j) {
             if (!vpCovKFi[j] || vpCovKFi[j]->isBad()) continue;
 
@@ -600,7 +514,6 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
                                              vvpMatchedMPs[j]);
             if (num > nMostBoWNumMatches) {
                 nMostBoWNumMatches = num;
-                nIndexMostBoWMatchesKF = j;
             }
         }
 
@@ -690,7 +603,6 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
                     // Optimize Sim3 transformation with every matches
                     Eigen::Matrix<double, 7, 7> mHessian7x7;
 
-                    bool bFixedScale = mbFixScale;
                     if (mpTracker->mSensor == System::IMU_MONOCULAR &&
                         !mpCurrentKF->GetMap()->GetIniertialBA2())
                         bFixedScale = false;
@@ -814,11 +726,9 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
         return nNumCoincidences >= 3;
     } else {
         int maxStage = -1;
-        int maxMatched;
         for (int i = 0; i < vnStage.size(); ++i) {
             if (vnStage[i] > maxStage) {
                 maxStage = vnStage[i];
-                maxMatched = vnMatchesStage[i];
             }
         }
     }
@@ -914,19 +824,7 @@ void LoopClosing::CorrectLoop() {
     mpLocalMapper->EmptyQueue();  // Proccess keyframes in the queue
 
     // If a Global Bundle Adjustment is running, abort it
-    if (isRunningGBA()) {
-        cout << "Stoping Global Bundle Adjustment...";
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
-
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        cout << "  Done!!" << endl;
-    }
+    StopGBAIfRunning();
 
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
@@ -1091,13 +989,11 @@ void LoopClosing::CorrectLoop() {
         !mpCurrentKF->GetMap()->GetIniertialBA2())
         bFixedScale = false;
 
-    // cout << "Optimize essential graph" << endl;
     if (pLoopMap->IsInertial() && pLoopMap->isImuInitialized()) {
         Optimizer::OptimizeEssentialGraph4DoF(pLoopMap, mpLoopMatchedKF,
                                               mpCurrentKF, NonCorrectedSim3,
                                               CorrectedSim3, LoopConnections);
     } else {
-        // cout << "Loop -> Scale correction: " << mg2oLoopScw.scale() << endl;
         Optimizer::OptimizeEssentialGraph(
             pLoopMap, mpLoopMatchedKF, mpCurrentKF, NonCorrectedSim3,
             CorrectedSim3, LoopConnections, bFixedScale);
@@ -1116,7 +1012,6 @@ void LoopClosing::CorrectLoop() {
         mbRunningGBA = true;
         mbFinishedGBA = false;
         mbStopGBA = false;
-        mnCorrectionGBA = mnNumCorrection;
 
         mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment, this,
                                  pLoopMap, mpCurrentKF->mnId);
@@ -1149,23 +1044,10 @@ void LoopClosing::MergeLocal() {
     bool bRelaunchBA = false;
 
     //  If a Global Bundle Adjustment is running, abort it
-    //  GBAを行っているなら停止させる
-    if (isRunningGBA()) {
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
+    StopGBAIfRunning();
 
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        bRelaunchBA = true;
-    }
-
-    // ローカルマッピングも停止させる命令を出し、停止するのを待つ。
+    //ローカルマッピングに停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
-    // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
         usleep(1000);
     }
@@ -1227,7 +1109,6 @@ void LoopClosing::MergeLocal() {
     int nNumTries = 0;
     while (spLocalWindowKFs.size() < numTemporalKFs && nNumTries < nMaxTries) {
         vector<KeyFrame*> vpNewCovKFs;
-        vpNewCovKFs.empty();
         for (KeyFrame* pKFi : spLocalWindowKFs) {
             vector<KeyFrame*> vpKFiCov =
                 pKFi->GetBestCovisibilityKeyFrames(numTemporalKFs / 2);
@@ -1363,8 +1244,6 @@ void LoopClosing::MergeLocal() {
         // map
     }
 
-    int numPointsWithCorrection = 0;
-
     // for(MapPoint* pMPi : spLocalWindowMPs)
     set<MapPoint*>::iterator itMP = spLocalWindowMPs.begin();
     while (itMP != spLocalWindowMPs.end()) {
@@ -1377,7 +1256,6 @@ void LoopClosing::MergeLocal() {
         KeyFrame* pKFref = pMPi->GetReferenceKeyFrame();
         if (vCorrectedSim3.find(pKFref) == vCorrectedSim3.end()) {
             itMP = spLocalWindowMPs.erase(itMP);
-            numPointsWithCorrection++;
             continue;
         }
         g2o::Sim3 g2oCorrectedSwi = vCorrectedSim3[pKFref].inverse();
@@ -1406,7 +1284,6 @@ void LoopClosing::MergeLocal() {
 
         for (KeyFrame* pKFi : spLocalWindowKFs) {
             if (!pKFi || pKFi->isBad()) {
-                // std::cout << "Bad KF in correction" << std::endl;
                 continue;
             }
 
@@ -1493,17 +1370,13 @@ void LoopClosing::MergeLocal() {
               std::back_inserter(vpLocalCurrentWindowKFs));
     std::copy(spMergeConnectedKFs.begin(), spMergeConnectedKFs.end(),
               std::back_inserter(vpMergeConnectedKFs));
-    if (mpTracker->mSensor == System::IMU_MONOCULAR ||
-        mpTracker->mSensor == System::IMU_STEREO ||
-        mpTracker->mSensor == System::IMU_RGBD) {
+    if (IsUseIMU()) {
         Optimizer::MergeInertialBA(mpCurrentKF, mpMergeMatchedKF, &bStop,
                                    pCurrentMap, vCorrectedSim3);
     } else {
         Optimizer::LocalBundleAdjustment(mpCurrentKF, vpLocalCurrentWindowKFs,
                                          vpMergeConnectedKFs, &bStop);
     }
-
-    // std::cout << "[Merge]: Welding bundle adjustment finished" << std::endl;
 
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();
@@ -1648,11 +1521,6 @@ void LoopClosing::MergeLocal() {
 /// GBAおよびmapupdateに対してロック
 /// IMUを使用している場合のマージ処理
 void LoopClosing::MergeLocal2() {
-    // cout << "Merge detected!!!!" << endl;
-
-    int numTemporalKFs = 11;  // TODO (set by parameter): Temporal KFs in the
-                              // local window if the map is inertial.
-
     // Relationship to rebuild the essential graph, it is used two times, first
     // in the local window and later in the rest of the map
     KeyFrame* pNewChild;
@@ -1664,32 +1532,14 @@ void LoopClosing::MergeLocal2() {
     KeyFrameAndPose CorrectedSim3, NonCorrectedSim3;
     // NonCorrectedSim3[mpCurrentKF]=mg2oLoopScw;
 
-    // Flag that is true only when we stopped a running BA, in this case we need
-    // relaunch at the end of the merge
-    bool bRelaunchBA = false;
-
-    // cout << "Check Full Bundle Adjustment" << endl;
     //  If a Global Bundle Adjustment is running, abort it
-    if (isRunningGBA()) {
-        unique_lock<mutex> lock(mMutexGBA);
-        mbStopGBA = true;
+    StopGBAIfRunning();
 
-        mnFullBAIdx++;
-
-        if (mpThreadGBA) {
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-        }
-        bRelaunchBA = true;
-    }
-
-    // cout << "Request Stop Local Mapping" << endl;
     mpLocalMapper->RequestStop();
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
         usleep(1000);
     }
-    // cout << "Local Map stopped" << endl;
 
     Map* pCurrentMap = mpCurrentKF->GetMap();
     Map* pMergeMap = mpMergeMatchedKF->GetMap();
@@ -1703,24 +1553,15 @@ void LoopClosing::MergeLocal2() {
 
         mpLocalMapper->EmptyQueue();
 
-        std::chrono::steady_clock::time_point t2 =
-            std::chrono::steady_clock::now();
-        bool bScaleVel = false;
-        if (s_on != 1) bScaleVel = true;
+        bool bScaleVel = (s_on != 1);
         mpAtlas->GetCurrentMap()->ApplyScaledRotation(T_on, s_on, bScaleVel);
         mpTracker->UpdateFrameIMU(s_on, mpCurrentKF->GetImuBias(),
                                   mpTracker->GetLastKeyFrame());
-
-        std::chrono::steady_clock::time_point t3 =
-            std::chrono::steady_clock::now();
     }
 
     const int numKFnew = pCurrentMap->KeyFramesInMap();
 
-    if ((mpTracker->mSensor == System::IMU_MONOCULAR ||
-         mpTracker->mSensor == System::IMU_STEREO ||
-         mpTracker->mSensor == System::IMU_RGBD) &&
-        !pCurrentMap->GetIniertialBA2()) {
+    if (IsUseIMU() && !pCurrentMap->GetIniertialBA2()) {
         // Map is not completly initialized
         Eigen::Vector3d bg, ba;
         bg << 0., 0., 0.;
@@ -1850,13 +1691,29 @@ void LoopClosing::MergeLocal2() {
     // Perform BA
     bool bStopFlag = false;
     KeyFrame* pCurrKF = mpTracker->GetLastKeyFrame();
-    // cout << "start MergeInertialBA" << endl;
     Optimizer::MergeInertialBA(pCurrKF, mpMergeMatchedKF, &bStopFlag,
                                pCurrentMap, CorrectedSim3);
     // Release Local Mapping.
     mpLocalMapper->Release();
 
     return;
+}
+
+// Added
+void LoopClosing::StopGBAIfRunning() {
+    if (isRunningGBA()) {
+        cout << "Stoping Global Bundle Adjustment...";
+        unique_lock<mutex> lock(mMutexGBA);
+        mbStopGBA = true;
+
+        mnFullBAIdx++;
+
+        if (mpThreadGBA) {
+            mpThreadGBA->detach();
+            delete mpThreadGBA;
+        }
+        cout << "  Done!!" << endl;
+    }
 }
 
 void LoopClosing::CheckObservations(set<KeyFrame*>& spKFsMap1,
@@ -1903,34 +1760,24 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose& CorrectedPosesMap,
                                 vector<MapPoint*>& vpMapPoints) {
     ORBmatcher matcher(0.8);
 
-    int total_replaces = 0;
-
     for (KeyFrameAndPose::const_iterator mit = CorrectedPosesMap.begin(),
                                          mend = CorrectedPosesMap.end();
          mit != mend; mit++) {
-        int num_replaces = 0;
         KeyFrame* pKFi = mit->first;
         Map* pMap = pKFi->GetMap();
 
         g2o::Sim3 g2oScw = mit->second;
-        Sophus::Sim3f Scw = Converter::toSophus(g2oScw);
 
         vector<MapPoint*> vpReplacePoints(vpMapPoints.size(),
                                           static_cast<MapPoint*>(NULL));
-        int numFused = matcher.Fuse(pKFi, Scw, vpMapPoints, 4, vpReplacePoints);
 
         // Get Map Mutex
         unique_lock<mutex> lock(pMap->mMutexMapUpdate);
         const int nLP = vpMapPoints.size();
         for (int i = 0; i < nLP; i++) {
             MapPoint* pRep = vpReplacePoints[i];
-            if (pRep) {
-                num_replaces += 1;
-                pRep->Replace(vpMapPoints[i]);
-            }
+            if (pRep) pRep->Replace(vpMapPoints[i]);
         }
-
-        total_replaces += num_replaces;
     }
 }
 
@@ -1938,11 +1785,8 @@ void LoopClosing::SearchAndFuse(const vector<KeyFrame*>& vConectedKFs,
                                 vector<MapPoint*>& vpMapPoints) {
     ORBmatcher matcher(0.8);
 
-    int total_replaces = 0;
-
     for (auto mit = vConectedKFs.begin(), mend = vConectedKFs.end();
          mit != mend; mit++) {
-        int num_replaces = 0;
         KeyFrame* pKF = (*mit);
         Map* pMap = pKF->GetMap();
         Sophus::SE3f Tcw = pKF->GetPose();
@@ -1957,10 +1801,7 @@ void LoopClosing::SearchAndFuse(const vector<KeyFrame*>& vConectedKFs,
         const int nLP = vpMapPoints.size();
         for (int i = 0; i < nLP; i++) {
             MapPoint* pRep = vpReplacePoints[i];
-            if (pRep) {
-                num_replaces += 1;
-                pRep->Replace(vpMapPoints[i]);
-            }
+            if (pRep) pRep->Replace(vpMapPoints[i]);
         }
     }
 }
@@ -2067,9 +1908,7 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
 
             // Get Map Mutex
             unique_lock<mutex> lock(pActiveMap->mMutexMapUpdate);
-            // cout << "LC: Update Map Mutex adquired" << endl;
 
-            // pActiveMap->PrintEssentialGraph();
             //  Correct keyframes starting at map first keyframe
             list<KeyFrame*> lpKFtoCheck(pActiveMap->mvpKeyFrameOrigins.begin(),
                                         pActiveMap->mvpKeyFrameOrigins.end());
@@ -2107,13 +1946,7 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
                 pKF->SetPose(pKF->mTcwGBA);
 
                 if (pKF->bImu) {
-                    // cout << "-------Update inertial values" << endl;
                     pKF->mVwbBefGBA = pKF->GetVelocity();
-                    // if (pKF->mVwbGBA.empty())
-                    //     Verbose::PrintMess("pKF->mVwbGBA is empty",
-                    //     Verbose::VERBOSITY_NORMAL);
-
-                    // assert(!pKF->mVwbGBA.empty());
                     pKF->SetVelocity(pKF->mVwbGBA);
                     pKF->SetNewBias(pKF->mBiasGBA);
                 }
@@ -2169,10 +2002,50 @@ void LoopClosing::RequestFinish() {
     mbFinishRequested = true;
 }
 
+// added
+void LoopClosing::SetCurrentKF() {
+    unique_lock<mutex> lock(mMutexLoopQueue);
+    mpCurrentKF = mlpLoopKeyFrameQueue.front();
+    mlpLoopKeyFrameQueue.pop_front();
+    // Avoid that a keyframe can be erased while it is being process by this
+    // thread
+    mpCurrentKF->SetNotErase();
+    mpLastMap = mpCurrentKF->GetMap();
+}
+
+// added
+void LoopClosing::ResetLoopVariable() {
+    mpLoopLastCurrentKF->SetErase();
+    mpLoopMatchedKF->SetErase();
+    mnLoopNumCoincidences = 0;
+    mvpLoopMatchedMPs.clear();
+    mvpLoopMPs.clear();
+    mnLoopNumNotFound = 0;
+    mbLoopDetected = false;
+}
+
+// added
+void LoopClosing::ResetMergeVariable() {
+    mpMergeLastCurrentKF->SetErase();
+    mpMergeMatchedKF->SetErase();
+    mnMergeNumCoincidences = 0;
+    mvpMergeMatchedMPs.clear();
+    mvpMergeMPs.clear();
+    mnMergeNumNotFound = 0;
+    mbMergeDetected = false;
+}
+
 /// finishにロック
 bool LoopClosing::CheckFinish() {
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinishRequested;
+}
+
+// added
+bool LoopClosing::IsUseIMU() {
+    return (mpTracker->mSensor == System::IMU_MONOCULAR ||
+            mpTracker->mSensor == System::IMU_STEREO ||
+            mpTracker->mSensor == System::IMU_RGBD);
 }
 
 /// finishにロック

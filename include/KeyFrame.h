@@ -52,7 +52,7 @@ class KeyFrame {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & mnId;
+        ar& mnId;
         ar& const_cast<long unsigned int&>(mnFrameId);
         ar& const_cast<double&>(mTimeStamp);
         // Grid
@@ -81,7 +81,6 @@ class KeyFrame {
         // ar & mnPlaceRecognitionQuery;
         // ar & mnPlaceRecognitionWords;
         // ar & mPlaceRecognitionScore;
-        // ar & mbCurrentPlaceRecognition;
         // Variables of loop closing
         // serializeMatrix(ar,mTcwGBA,version);
         // serializeMatrix(ar,mTcwBefGBA,version);
@@ -102,7 +101,7 @@ class KeyFrame {
         // ar & mnBALocalForMerge;
 
         // Scale
-        ar & mfScale;
+        ar& mfScale;
         // Calibration parameters
         ar& const_cast<float&>(fx);
         ar& const_cast<float&>(fy);
@@ -123,8 +122,8 @@ class KeyFrame {
         ar& const_cast<vector<float>&>(mvDepth);
         serializeMatrix<Archive>(ar, mDescriptors, version);
         // BOW
-        ar & mBowVec;
-        ar & mFeatVec;
+        ar& mBowVec;
+        ar& mFeatVec;
         // Pose relative to parent
         serializeSophusSE3<Archive>(ar, mTcp, version);
         // Scale
@@ -143,49 +142,49 @@ class KeyFrame {
         // Pose
         serializeSophusSE3<Archive>(ar, mTcw, version);
         // MapPointsId associated to keypoints
-        ar & mvBackupMapPointsId;
+        ar& mvBackupMapPointsId;
         // Grid
-        ar & mGrid;
+        ar& mGrid;
         // Connected KeyFrameWeight
-        ar & mBackupConnectedKeyFrameIdWeights;
+        ar& mBackupConnectedKeyFrameIdWeights;
         // Spanning Tree and Loop Edges
-        ar & mbFirstConnection;
-        ar & mBackupParentId;
-        ar & mvBackupChildrensId;
-        ar & mvBackupLoopEdgesId;
-        ar & mvBackupMergeEdgesId;
+        ar& mbFirstConnection;
+        ar& mBackupParentId;
+        ar& mvBackupChildrensId;
+        ar& mvBackupLoopEdgesId;
+        ar& mvBackupMergeEdgesId;
         // Bad flags
-        ar & mbNotErase;
-        ar & mbToBeErased;
-        ar & mbBad;
+        ar& mbNotErase;
+        ar& mbToBeErased;
+        ar& mbBad;
 
-        ar & mHalfBaseline;
+        ar& mHalfBaseline;
 
-        ar & mnOriginMapId;
+        ar& mnOriginMapId;
 
         // Camera variables
-        ar & mnBackupIdCamera;
-        ar & mnBackupIdCamera2;
+        ar& mnBackupIdCamera;
+        ar& mnBackupIdCamera2;
 
         // Fisheye variables
-        ar & mvLeftToRightMatch;
-        ar & mvRightToLeftMatch;
+        ar& mvLeftToRightMatch;
+        ar& mvRightToLeftMatch;
         ar& const_cast<int&>(NLeft);
         ar& const_cast<int&>(NRight);
         serializeSophusSE3<Archive>(ar, mTlr, version);
         serializeVectorKeyPoints<Archive>(ar, mvKeysRight, version);
-        ar & mGridRight;
+        ar& mGridRight;
 
         // Inertial variables
-        ar & mImuBias;
-        ar & mBackupImuPreintegrated;
-        ar & mImuCalib;
-        ar & mBackupPrevKFId;
-        ar & mBackupNextKFId;
-        ar & bImu;
+        ar& mImuBias;
+        ar& mBackupImuPreintegrated;
+        ar& mImuCalib;
+        ar& mBackupPrevKFId;
+        ar& mBackupNextKFId;
+        ar& bImu;
         ar& boost::serialization::make_array(mVw.data(), mVw.size());
         ar& boost::serialization::make_array(mOwb.data(), mOwb.size());
-        ar & mbHasVelocity;
+        ar& mbHasVelocity;
     }
 
 public:
@@ -345,8 +344,6 @@ public:
     int mnPlaceRecognitionWords;
     float mPlaceRecognitionScore;
 
-    bool mbCurrentPlaceRecognition;
-
     // Variables used by loop closing
     Sophus::SE3f mTcwGBA;
     Sophus::SE3f mTcwBefGBA;
@@ -418,9 +415,6 @@ public:
     string mNameFile;
 
     int mnDataset;
-
-    std::vector<KeyFrame*> mvpLoopCandKFs;
-    std::vector<KeyFrame*> mvpMergeCandKFs;
 
     // bool mbHasHessian;
     // cv::Mat mHessianPose;

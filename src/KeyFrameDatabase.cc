@@ -638,8 +638,6 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame* pKF,
 
     list<pair<float, KeyFrame*> > lScoreAndMatch;
 
-    int nscores = 0;
-
     // Compute similarity score.
     for (list<KeyFrame*>::iterator lit = lKFsSharingWords.begin(),
                                    lend = lKFsSharingWords.end();
@@ -647,7 +645,6 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame* pKF,
         KeyFrame* pKFi = *lit;
 
         if (pKFi->mnPlaceRecognitionWords > minCommonWords) {
-            nscores++;
             float si = mpVoc->score(pKF->mBowVec, pKFi->mBowVec);
             pKFi->mPlaceRecognitionScore = si;
             lScoreAndMatch.push_back(make_pair(si, pKFi));

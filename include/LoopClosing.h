@@ -31,7 +31,6 @@
 #include "KeyFrameDatabase.h"
 #include "LocalMapping.h"
 #include "ORBVocabulary.h"
-#include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 #include "Tracking.h"
 
 namespace ORB_SLAM3 {
@@ -120,6 +119,7 @@ protected:
 
     // Methods to implement the new place recognition algorithm
     bool NewDetectCommonRegions();
+    bool CheckSkipCondition();  // added
     bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF,
                                         KeyFrame* pMatchedKF, g2o::Sim3& gScw,
                                         int& nNumProjMatches,
@@ -152,6 +152,7 @@ protected:
     void MergeLocal();
     void MergeLocal2();
 
+    void StopGBAIfRunning();  // added
     void CheckObservations(set<KeyFrame*>& spKFsMap1,
                            set<KeyFrame*>& spKFsMap2);
 
@@ -161,7 +162,12 @@ protected:
     Map* mpMapToReset;
     std::mutex mMutexReset;
 
+    void SetCurrentKF();
+    void ResetLoopVariable();   // added
+    void ResetMergeVariable();  // added
+
     bool CheckFinish();
+    bool IsUseIMU();  // added
     void SetFinish();
     bool mbFinishRequested;
     bool mbFinished;
@@ -211,7 +217,6 @@ protected:
     int mnMergeNumNotFound;
     KeyFrame* mpMergeLastCurrentKF;
     g2o::Sim3 mg2oMergeSlw;
-    g2o::Sim3 mg2oMergeSmw;
     g2o::Sim3 mg2oMergeScw;
     KeyFrame* mpMergeMatchedKF;
     std::vector<MapPoint*> mvpMergeMPs;
@@ -233,17 +238,12 @@ protected:
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;
 
-    // TODO: これはboolではなくintなのではないのか?
-    bool mnFullBAIdx;
+    // boolだったけど、intが正しいのでintに変更
+    int mnFullBAIdx;
 
     vector<double> vdPR_CurrentTime;
     vector<double> vdPR_MatchedTime;
     vector<int> vnPR_TypeRecogn;
-
-    // DEBUG
-    string mstrFolderSubTraj;
-    int mnNumCorrection;
-    int mnCorrectionGBA;
 
     // To (de)activate LC
     bool mbActiveLC = true;
