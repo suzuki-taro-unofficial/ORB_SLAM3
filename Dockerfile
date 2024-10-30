@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y  \
     libboost-all-dev libeigen3-dev \
     git cmake curl unzip \
     build-essential \
