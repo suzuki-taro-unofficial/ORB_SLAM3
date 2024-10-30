@@ -39,6 +39,10 @@ class LoopClosing;
 class Atlas;
 
 class LocalMapping {
+private:
+    /// TODO: Add comment
+    void RunOnce();
+
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
@@ -109,6 +113,11 @@ public:
     unsigned int mInitSect;
     unsigned int mIdxInit;
     unsigned int mnKFs;
+    /// Mapで最初のKFの時間
+    /// - `InitializeIMU` を実行時に設定され、Systemが読み込む
+    /// - Mapの切り替わり時にTracking側からも設定される。
+    /// - 両者とも、Mapで最初のKFの時間を設定している。
+    /// - Trackingから設定される方が先なはず。
     double mFirstTs;
     int mnMatchesInliers;
 
@@ -127,23 +136,6 @@ public:
     bool mbFarPoints;
     float mThFarPoints;
 
-#ifdef REGISTER_TIMES
-    vector<double> vdKFInsert_ms;
-    vector<double> vdMPCulling_ms;
-    vector<double> vdMPCreation_ms;
-    vector<double> vdLBA_ms;
-    vector<double> vdKFCulling_ms;
-    vector<double> vdLMTotal_ms;
-
-    vector<double> vdLBASync_ms;
-    vector<double> vdKFCullingSync_ms;
-    vector<int> vnLBA_edges;
-    vector<int> vnLBA_KFopt;
-    vector<int> vnLBA_KFfixed;
-    vector<int> vnLBA_MPs;
-    int nLBA_exec;
-    int nLBA_abort;
-#endif
 protected:
     /**
      * 入力キューにキーフレームがあるならtrueを返す。

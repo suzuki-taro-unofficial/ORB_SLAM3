@@ -102,7 +102,7 @@ public:
                      std::vector<MapPoint *> &vpMatches12,
                      const Sophus::Sim3f &S12, const float th);
 
-    // Project MapPoints into KeyFrame and search for duplicated MapPoints.
+    /// Project MapPoints into KeyFrame and search for duplicated MapPoints.
     int Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints,
              const float th = 3.0, const bool bRight = false);
 

@@ -851,7 +851,7 @@ int LoopClosing::FindMatchesByProjection(
     vector<KeyFrame*> vpCovKFm =
         pMatchedKFw->GetBestCovisibilityKeyFrames(nNumCovisibles);
     int nInitialCov = vpCovKFm.size();
-    vpCovKFm.push_back(pMatchedKFw);  //末尾にpMatchedKFw自身も追加
+    vpCovKFm.push_back(pMatchedKFw);  // 末尾にpMatchedKFw自身も追加
     set<KeyFrame*> spCheckKFs(vpCovKFm.begin(), vpCovKFm.end());
     set<KeyFrame*> spCurrentCovisbles = pCurrentKF->GetConnectedKeyFrames();
     if (nInitialCov < nNumCovisibles) {
@@ -889,7 +889,7 @@ int LoopClosing::FindMatchesByProjection(
     }
 
     // Sim3変換の適用
-    //与えられたSim3変換を使って、2つのキーフレーム間の位置関係を調整
+    // 与えられたSim3変換を使って、2つのキーフレーム間の位置関係を調整
     Sophus::Sim3f mScw = Converter::toSophus(g2oScw);
     ORBmatcher matcher(0.9, true);
 
@@ -899,7 +899,7 @@ int LoopClosing::FindMatchesByProjection(
     int num_matches = matcher.SearchByProjection(pCurrentKF, mScw, vpMapPoints,
                                                  vpMatchedMapPoints, 3, 1.5);
 
-    //見つけたmappointの数を返す。
+    // 見つけたmappointの数を返す。
     return num_matches;
 }
 
@@ -1163,7 +1163,7 @@ void LoopClosing::MergeLocal() {
         bRelaunchBA = true;
     }
 
-    //ローカルマッピングも停止させる命令を出し、停止するのを待つ。
+    // ローカルマッピングも停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {

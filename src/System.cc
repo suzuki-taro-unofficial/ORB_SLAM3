@@ -984,6 +984,11 @@ vector<cv::KeyPoint> System::GetTrackedKeyPointsUn() {
     return mTrackedKeyPointsUn;
 }
 
+/**
+ * 関数名的にIMUの初期化からの経過時間を取得するように見えるが、
+ * LocalMapping.mFirstTsがマップで最初のKFの時刻を保持しているため、
+ * 実際にはMapで最初のKFからの経過時間になっている。
+ */
 double System::GetTimeFromIMUInit() {
     double aux = mpLocalMapper->GetCurrKFTime() - mpLocalMapper->mFirstTs;
     if ((aux > 0.) && mpAtlas->isImuInitialized())
