@@ -1,0 +1,9 @@
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/ORB_SLAM3
+      - build:/ORB_SLAM3/build
+    working_dir: /ORB_SLAM3
+volumes:
+  build:

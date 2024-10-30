@@ -21,7 +21,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Required packages
-find_package(OpenCV 4.4 REQUIRED)
+find_package(OpenCV 4.4)
+if(NOT OpenCV_FOUND)
+    find_package(OpenCV 3.0 REQUIRED)
+endif()
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(realsense2)
