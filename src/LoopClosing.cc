@@ -1044,12 +1044,10 @@ void LoopClosing::MergeLocal() {
     bool bRelaunchBA = false;
 
     //  If a Global Bundle Adjustment is running, abort it
-    //  GBAを行っているなら停止させる
     StopGBA();
 
-    //ローカルマッピングも停止させる命令を出し、停止するのを待つ。
+    //ローカルマッピングに停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
-    // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
         usleep(1000);
     }
