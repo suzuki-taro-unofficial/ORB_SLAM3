@@ -262,7 +262,7 @@ bool LoopClosing::NewDetectCommonRegions() {
             mg2oLoopSlw = gScw;
             mvpLoopMatchedMPs = vpMatchedMPs;
 
-            /// ループの候補が3つ以上見つかったらフラグを立てる。
+            // ループの候補が3つ以上見つかったらフラグを立てる。
             mbLoopDetected = mnLoopNumCoincidences >= 3;
             mnLoopNumNotFound = 0;
 
@@ -334,7 +334,7 @@ bool LoopClosing::NewDetectCommonRegions() {
                                             vpMergeBowCand, 3);
     }
 
-    /// 初回はBoWを用いてループ検出を行う。
+    // 初回とSim3で一致が見られないときはBoWを用いてループ検出を行う。
     // Check the BoW candidates if the geometric candidate list is empty
     // Loop candidates
     if (!bLoopDetectedInKF && !vpLoopBowCand.empty()) {
