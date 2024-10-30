@@ -10,7 +10,8 @@ void LocalMapping::KeyFrameCulling() {
     // only consider close stereo points
     const int Nd = 21;
     mpCurrentKeyFrame->UpdateBestCovisibles();
-    vector<KeyFrame*> vpLocalKeyFrames = mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
+    vector<KeyFrame*> vpLocalKeyFrames =
+        mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
 
     float redundant_th;
     if (!mbInertial)
@@ -35,12 +36,14 @@ void LocalMapping::KeyFrameCulling() {
         last_ID = aux_KF->mnId;
     }
 
-    for (vector<KeyFrame*>::iterator vit = vpLocalKeyFrames.begin(), vend = vpLocalKeyFrames.end(); vit != vend;
-         vit++) {
+    for (vector<KeyFrame*>::iterator vit = vpLocalKeyFrames.begin(),
+                                     vend = vpLocalKeyFrames.end();
+         vit != vend; vit++) {
         count++;
         KeyFrame* pKF = *vit;
 
-        if ((pKF->mnId == pKF->GetMap()->GetInitKFid()) || pKF->isBad()) continue;
+        if ((pKF->mnId == pKF->GetMap()->GetInitKFid()) || pKF->isBad())
+            continue;
         const vector<MapPoint*> vpMapPoints = pKF->GetMapPointMatches();
 
         int nObs = 3;
@@ -52,34 +55,46 @@ void LocalMapping::KeyFrameCulling() {
             if (pMP) {
                 if (!pMP->isBad()) {
                     if (!mbMonocular) {
-                        if (pKF->mvDepth[i] > pKF->mThDepth || pKF->mvDepth[i] < 0) continue;
+                        if (pKF->mvDepth[i] > pKF->mThDepth ||
+                            pKF->mvDepth[i] < 0)
+                            continue;
                     }
 
                     nMPs++;
                     if (pMP->Observations() > thObs) {
-                        const int& scaleLevel = (pKF->NLeft == -1) ? pKF->mvKeysUn[i].octave
-                                                : (i < pKF->NLeft) ? pKF->mvKeys[i].octave
-                                                                   : pKF->mvKeysRight[i].octave;
-                        const map<KeyFrame*, tuple<int, int>> observations = pMP->GetObservations();
+                        const int& scaleLevel =
+                            (pKF->NLeft == -1) ? pKF->mvKeysUn[i].octave
+                            : (i < pKF->NLeft) ? pKF->mvKeys[i].octave
+                                               : pKF->mvKeysRight[i].octave;
+                        const map<KeyFrame*, tuple<int, int>> observations =
+                            pMP->GetObservations();
                         int nObs = 0;
-                        for (map<KeyFrame*, tuple<int, int>>::const_iterator mit = observations.begin(),
-                                                                             mend = observations.end();
+                        for (map<KeyFrame*, tuple<int, int>>::const_iterator
+                                 mit = observations.begin(),
+                                 mend = observations.end();
                              mit != mend; mit++) {
                             KeyFrame* pKFi = mit->first;
                             if (pKFi == pKF) continue;
                             tuple<int, int> indexes = mit->second;
-                            int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
+                            int leftIndex = get<0>(indexes),
+                                rightIndex = get<1>(indexes);
                             int scaleLeveli = -1;
                             if (pKFi->NLeft == -1)
                                 scaleLeveli = pKFi->mvKeysUn[leftIndex].octave;
                             else {
                                 if (leftIndex != -1) {
-                                    scaleLeveli = pKFi->mvKeys[leftIndex].octave;
+                                    scaleLeveli =
+                                        pKFi->mvKeys[leftIndex].octave;
                                 }
                                 if (rightIndex != -1) {
-                                    int rightLevel = pKFi->mvKeysRight[rightIndex - pKFi->NLeft].octave;
-                                    scaleLeveli =
-                                        (scaleLeveli == -1 || scaleLeveli > rightLevel) ? rightLevel : scaleLeveli;
+                                    int rightLevel =
+                                        pKFi->mvKeysRight[rightIndex -
+                                                          pKFi->NLeft]
+                                            .octave;
+                                    scaleLeveli = (scaleLeveli == -1 ||
+                                                   scaleLeveli > rightLevel)
+                                                      ? rightLevel
+                                                      : scaleLeveli;
                                 }
                             }
 
@@ -103,18 +118,26 @@ void LocalMapping::KeyFrameCulling() {
                 if (pKF->mnId > (mpCurrentKeyFrame->mnId - 2)) continue;
 
                 if (pKF->mPrevKF && pKF->mNextKF) {
-                    const float t = pKF->mNextKF->mTimeStamp - pKF->mPrevKF->mTimeStamp;
+                    const float t =
+                        pKF->mNextKF->mTimeStamp - pKF->mPrevKF->mTimeStamp;
 
-                    if ((bInitImu && (pKF->mnId < last_ID) && t < 3.) || (t < 0.5)) {
-                        pKF->mNextKF->mpImuPreintegrated->MergePrevious(pKF->mpImuPreintegrated);
+                    if ((bInitImu && (pKF->mnId < last_ID) && t < 3.) ||
+                        (t < 0.5)) {
+                        pKF->mNextKF->mpImuPreintegrated->MergePrevious(
+                            pKF->mpImuPreintegrated);
                         pKF->mNextKF->mPrevKF = pKF->mPrevKF;
                         pKF->mPrevKF->mNextKF = pKF->mNextKF;
                         pKF->mNextKF = NULL;
                         pKF->mPrevKF = NULL;
                         pKF->SetBadFlag();
-                    } else if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2() &&
-                               ((pKF->GetImuPosition() - pKF->mPrevKF->GetImuPosition()).norm() < 0.02) && (t < 3)) {
-                        pKF->mNextKF->mpImuPreintegrated->MergePrevious(pKF->mpImuPreintegrated);
+                    } else if (!mpCurrentKeyFrame->GetMap()
+                                    ->GetIniertialBA2() &&
+                               ((pKF->GetImuPosition() -
+                                 pKF->mPrevKF->GetImuPosition())
+                                    .norm() < 0.02) &&
+                               (t < 3)) {
+                        pKF->mNextKF->mpImuPreintegrated->MergePrevious(
+                            pKF->mpImuPreintegrated);
                         pKF->mNextKF->mPrevKF = pKF->mPrevKF;
                         pKF->mPrevKF->mNextKF = pKF->mNextKF;
                         pKF->mNextKF = NULL;

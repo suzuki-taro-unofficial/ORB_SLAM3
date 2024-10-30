@@ -45,8 +45,8 @@ private:
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular, bool bInertial,
-                 const string& _strSeqName = std::string());
+    LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
+                 bool bInertial, const string& _strSeqName = std::string());
 
     void SetLoopCloser(LoopClosing* pLoopCloser);
 
@@ -199,7 +199,8 @@ protected:
     /**
      * InertialOptimizationとFullInertialBAを行っている
      */
-    void InitializeIMU(float priorG = 1e2, float priorA = 1e6, bool bFirst = false);
+    void InitializeIMU(float priorG = 1e2, float priorA = 1e6,
+                       bool bFirst = false);
     void ScaleRefinement();
 
     bool bInitializing;

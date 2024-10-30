@@ -3,15 +3,19 @@
 #include "ORBmatcher.h"
 
 namespace ORB_SLAM3 {
-std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame* mpCurrentKeyFrame,
-                                               const bool& mbAbortBA, const bool& mbInertial);
+std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular,
+                                               KeyFrame* mpCurrentKeyFrame,
+                                               const bool& mbAbortBA,
+                                               const bool& mbInertial);
 
 void LocalMapping::SearchInNeighbors() {
-    vector<KeyFrame*> vpTargetKFs = GetNeighbors(mbMonocular, mpCurrentKeyFrame, mbAbortBA, mbInertial);
+    vector<KeyFrame*> vpTargetKFs =
+        GetNeighbors(mbMonocular, mpCurrentKeyFrame, mbAbortBA, mbInertial);
 
     // Search matches by projection from current KF in target KFs
     ORBmatcher matcher;
-    vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
+    vector<MapPoint*> vpMapPointMatches =
+        mpCurrentKeyFrame->GetMapPointMatches();
     for (auto pKFi : vpTargetKFs) {
         matcher.Fuse(pKFi, vpMapPointMatches);
         /// matcher.Fuseの第三引数はfloat型なので普通にバグ
@@ -29,14 +33,17 @@ void LocalMapping::SearchInNeighbors() {
 
         for (auto pMP : vpMapPointsKFi) {
             if (!pMP) continue;
-            if (pMP->isBad() || pMP->mnFuseCandidateForKF == mpCurrentKeyFrame->mnId) continue;
+            if (pMP->isBad() ||
+                pMP->mnFuseCandidateForKF == mpCurrentKeyFrame->mnId)
+                continue;
             pMP->mnFuseCandidateForKF = mpCurrentKeyFrame->mnId;
             vpFuseCandidates.push_back(pMP);
         }
     }
 
     matcher.Fuse(mpCurrentKeyFrame, vpFuseCandidates);
-    if (mpCurrentKeyFrame->NLeft != -1) matcher.Fuse(mpCurrentKeyFrame, vpFuseCandidates, true);
+    if (mpCurrentKeyFrame->NLeft != -1)
+        matcher.Fuse(mpCurrentKeyFrame, vpFuseCandidates, true);
 
     // Update points
     vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
@@ -52,8 +59,11 @@ void LocalMapping::SearchInNeighbors() {
     mpCurrentKeyFrame->UpdateConnections();
 }
 
-void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame);
-void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA);
+void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn,
+                      KeyFrame* mpCurrentKeyFrame);
+void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs,
+                                 KeyFrame* mpCurrentKeyFrame,
+                                 const bool& mbAbortBA);
 void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame);
 
 /**
@@ -61,8 +71,10 @@ void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame);
  *
  * SearchInNeighborsから切り出した
  */
-std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame* mpCurrentKeyFrame,
-                                               const bool& mbAbortBA, const bool& mbInertial) {
+std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular,
+                                               KeyFrame* mpCurrentKeyFrame,
+                                               const bool& mbAbortBA,
+                                               const bool& mbInertial) {
     // Retrieve neighbor keyframes
     int nn = 10;
     if (mbMonocular) nn = 30;
@@ -78,22 +90,29 @@ std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular, KeyFrame
     return vpTargetKFs;
 }
 
-void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn, KeyFrame* mpCurrentKeyFrame) {
-    const vector<KeyFrame*> vpNeighKFs = mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
+void getFromCovisible(vector<KeyFrame*>& vpTargetKFs, const int nn,
+                      KeyFrame* mpCurrentKeyFrame) {
+    const vector<KeyFrame*> vpNeighKFs =
+        mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
     for (auto pKFi : vpNeighKFs) {
-        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) continue;
+        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId)
+            continue;
         vpTargetKFs.push_back(pKFi);
         pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
     }
 }
 
-void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame, const bool& mbAbortBA) {
+void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs,
+                                 KeyFrame* mpCurrentKeyFrame,
+                                 const bool& mbAbortBA) {
     // Add some covisible of covisible
     // Extend to some second neighbors if abort is not requested
     for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
-        const vector<KeyFrame*> vpSecondNeighKFs = vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
+        const vector<KeyFrame*> vpSecondNeighKFs =
+            vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
         for (auto pKFi2 : vpSecondNeighKFs) {
-            if (pKFi2->isBad() || pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
+            if (pKFi2->isBad() ||
+                pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
                 pKFi2->mnId == mpCurrentKeyFrame->mnId)
                 continue;
             vpTargetKFs.push_back(pKFi2);
@@ -103,11 +122,13 @@ void getFromCovisibleOfCovisible(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCur
     }
 }
 
-void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs, KeyFrame* mpCurrentKeyFrame) {
+void getFromPrevKF(vector<KeyFrame*>& vpTargetKFs,
+                   KeyFrame* mpCurrentKeyFrame) {
     // Extend to temporal neighbors
     KeyFrame* pKFi = mpCurrentKeyFrame->mPrevKF;
     while (vpTargetKFs.size() < 20 && pKFi) {
-        if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) {
+        if (pKFi->isBad() ||
+            pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId) {
             pKFi = pKFi->mPrevKF;
             continue;
         }

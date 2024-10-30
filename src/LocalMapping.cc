@@ -29,8 +29,8 @@
 
 namespace ORB_SLAM3 {
 
-LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular, bool bInertial,
-                           const string& _strSeqName)
+LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
+                           bool bInertial, const string& _strSeqName)
     : mpSystem(pSys),
       mbMonocular(bMonocular),
       mbInertial(bInertial),  // inertial 慣性
@@ -62,7 +62,9 @@ LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular, 
     mNumKFCulling = 0;
 }
 
-void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser) { mpLoopCloser = pLoopCloser; }
+void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser) {
+    mpLoopCloser = pLoopCloser;
+}
 
 void LocalMapping::SetTracker(Tracking* pTracker) { mpTracker = pTracker; }
 
@@ -88,7 +90,8 @@ void LocalMapping::ProcessNewKeyFrame() {
     mpCurrentKeyFrame->ComputeBoW();
 
     // Associate MapPoints to the new keyframe and update normal and descriptor
-    const vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPointMatches =
+        mpCurrentKeyFrame->GetMapPointMatches();
 
     for (size_t i = 0; i < vpMapPointMatches.size(); i++) {
         MapPoint* pMP = vpMapPointMatches[i];
@@ -143,7 +146,8 @@ void LocalMapping::MapPointCulling() {
         else if (pMP->GetFoundRatio() < 0.25f) {
             pMP->SetBadFlag();
             lit = mlpRecentAddedMapPoints.erase(lit);
-        } else if (((int)nCurrentKFid - (int)pMP->mnFirstKFid) >= 2 && pMP->Observations() <= cnThObs) {
+        } else if (((int)nCurrentKFid - (int)pMP->mnFirstKFid) >= 2 &&
+                   pMP->Observations() <= cnThObs) {
             pMP->SetBadFlag();
             lit = mlpRecentAddedMapPoints.erase(lit);
         } else if (((int)nCurrentKFid - (int)pMP->mnFirstKFid) >= 3)
@@ -189,7 +193,9 @@ void LocalMapping::Release() {
     if (mbFinished) return;
     mbStopped = false;
     mbStopRequested = false;
-    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(), lend = mlNewKeyFrames.end(); lit != lend; lit++)
+    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(),
+                                   lend = mlNewKeyFrames.end();
+         lit != lend; lit++)
         delete *lit;
     mlNewKeyFrames.clear();
 
@@ -352,12 +358,16 @@ void LocalMapping::ScaleRefinement() {
     // Before this line we are not changing the map
     unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
     if ((fabs(mScale - 1.f) > 0.002) || !mbMonocular) {
-        Sophus::SE3f Tgw(mRwg.cast<float>().transpose(), Eigen::Vector3f::Zero());
+        Sophus::SE3f Tgw(mRwg.cast<float>().transpose(),
+                         Eigen::Vector3f::Zero());
         mpAtlas->GetCurrentMap()->ApplyScaledRotation(Tgw, mScale, true);
-        mpTracker->UpdateFrameIMU(mScale, mpCurrentKeyFrame->GetImuBias(), mpCurrentKeyFrame);
+        mpTracker->UpdateFrameIMU(mScale, mpCurrentKeyFrame->GetImuBias(),
+                                  mpCurrentKeyFrame);
     }
 
-    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(), lend = mlNewKeyFrames.end(); lit != lend; lit++) {
+    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(),
+                                   lend = mlNewKeyFrames.end();
+         lit != lend; lit++) {
         (*lit)->SetBadFlag();
         delete *lit;
     }

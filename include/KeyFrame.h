@@ -254,7 +254,8 @@ public:
     MapPoint* GetMapPoint(const size_t& idx);
 
     // KeyPoint functions
-    std::vector<size_t> GetFeaturesInArea(const float& x, const float& y, const float& r,
+    std::vector<size_t> GetFeaturesInArea(const float& x, const float& y,
+                                          const float& r,
                                           const bool bRight = false) const;
     bool UnprojectStereo(int i, Eigen::Vector3f& x3D);
 
@@ -274,7 +275,9 @@ public:
 
     static bool weightComp(int a, int b) { return a > b; }
 
-    static bool lId(KeyFrame* pKF1, KeyFrame* pKF2) { return pKF1->mnId < pKF2->mnId; }
+    static bool lId(KeyFrame* pKF1, KeyFrame* pKF2) {
+        return pKF1->mnId < pKF2->mnId;
+    }
 
     Map* GetMap();
     void UpdateMap(Map* pMap);
@@ -286,11 +289,15 @@ public:
 
     IMU::Bias GetImuBias();
 
-    bool ProjectPointDistort(MapPoint* pMP, cv::Point2f& kp, float& u, float& v);
-    bool ProjectPointUnDistort(MapPoint* pMP, cv::Point2f& kp, float& u, float& v);
+    bool ProjectPointDistort(MapPoint* pMP, cv::Point2f& kp, float& u,
+                             float& v);
+    bool ProjectPointUnDistort(MapPoint* pMP, cv::Point2f& kp, float& u,
+                               float& v);
 
-    void PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP, set<GeometricCamera*>& spCam);
-    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsigned int, MapPoint*>& mpMPid,
+    void PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP,
+                 set<GeometricCamera*>& spCam);
+    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid,
+                  map<long unsigned int, MapPoint*>& mpMPid,
                   map<unsigned int, GeometricCamera*>& mpCamId);
 
     void SetORBVocabulary(ORBVocabulary* pORBVoc);
@@ -546,7 +553,8 @@ public:
                     right++;
             }
         }
-        cout << "Point distribution in KeyFrame: left-> " << left << " --- right-> " << right << endl;
+        cout << "Point distribution in KeyFrame: left-> " << left
+             << " --- right-> " << right << endl;
     }
 };
 

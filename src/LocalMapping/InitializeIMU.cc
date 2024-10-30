@@ -56,13 +56,16 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
         Eigen::Matrix3f Rwg;
         Eigen::Vector3f dirG;
         dirG.setZero();
-        for (vector<KeyFrame*>::iterator itKF = vpKF.begin(); itKF != vpKF.end(); itKF++) {
+        for (vector<KeyFrame*>::iterator itKF = vpKF.begin();
+             itKF != vpKF.end(); itKF++) {
             if (!(*itKF)->mpImuPreintegrated) continue;
             if (!(*itKF)->mPrevKF) continue;
 
-            dirG -= (*itKF)->mPrevKF->GetImuRotation() * (*itKF)->mpImuPreintegrated->GetUpdatedDeltaVelocity();
-            Eigen::Vector3f _vel =
-                ((*itKF)->GetImuPosition() - (*itKF)->mPrevKF->GetImuPosition()) / (*itKF)->mpImuPreintegrated->dT;
+            dirG -= (*itKF)->mPrevKF->GetImuRotation() *
+                    (*itKF)->mpImuPreintegrated->GetUpdatedDeltaVelocity();
+            Eigen::Vector3f _vel = ((*itKF)->GetImuPosition() -
+                                    (*itKF)->mPrevKF->GetImuPosition()) /
+                                   (*itKF)->mpImuPreintegrated->dT;
             (*itKF)->SetVelocity(_vel);
             (*itKF)->mPrevKF->SetVelocity(_vel);
         }
@@ -87,7 +90,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
     mInitTime = mpTracker->mLastFrame.mTimeStamp - vpKF.front()->mTimeStamp;
 
-    Optimizer::InertialOptimization(mpAtlas->GetCurrentMap(), mRwg, mScale, mbg, mba, mbMonocular, infoInertial, false,
+    Optimizer::InertialOptimization(mpAtlas->GetCurrentMap(), mRwg, mScale, mbg,
+                                    mba, mbMonocular, infoInertial, false,
                                     false, priorG, priorA);
 
     if (mScale < 1e-1) {
@@ -100,9 +104,11 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     {
         unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
         if ((fabs(mScale - 1.f) > 0.00001) || !mbMonocular) {
-            Sophus::SE3f Twg(mRwg.cast<float>().transpose(), Eigen::Vector3f::Zero());
+            Sophus::SE3f Twg(mRwg.cast<float>().transpose(),
+                             Eigen::Vector3f::Zero());
             mpAtlas->GetCurrentMap()->ApplyScaledRotation(Twg, mScale, true);
-            mpTracker->UpdateFrameIMU(mScale, vpKF[0]->GetImuBias(), mpCurrentKeyFrame);
+            mpTracker->UpdateFrameIMU(mScale, vpKF[0]->GetImuBias(),
+                                      mpCurrentKeyFrame);
         }
 
         // Check if initialization OK
@@ -122,13 +128,16 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
 
     if (bFIBA) {
         if (priorA != 0.f)
-            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId, NULL, true, priorG,
-                                      priorA);
+            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false,
+                                      mpCurrentKeyFrame->mnId, NULL, true,
+                                      priorG, priorA);
         else
-            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId, NULL, false);
+            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false,
+                                      mpCurrentKeyFrame->mnId, NULL, false);
     }
 
-    Verbose::PrintMess("Global Bundle Adjustment finished\nUpdating map ...", Verbose::VERBOSITY_NORMAL);
+    Verbose::PrintMess("Global Bundle Adjustment finished\nUpdating map ...",
+                       Verbose::VERBOSITY_NORMAL);
 
     // Get Map Mutex
     unique_lock<mutex> lock(mpAtlas->GetCurrentMap()->mMutexMapUpdate);
@@ -142,14 +151,16 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     }
 
     // Correct keyframes starting at map first keyframe
-    list<KeyFrame*> lpKFtoCheck(mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.begin(),
-                                mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.end());
+    list<KeyFrame*> lpKFtoCheck(
+        mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.begin(),
+        mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.end());
 
     while (!lpKFtoCheck.empty()) {
         KeyFrame* pKF = lpKFtoCheck.front();
         const set<KeyFrame*> sChilds = pKF->GetChilds();
         Sophus::SE3f Twc = pKF->GetPoseInverse();
-        for (set<KeyFrame*>::const_iterator sit = sChilds.begin(); sit != sChilds.end(); sit++) {
+        for (set<KeyFrame*>::const_iterator sit = sChilds.begin();
+             sit != sChilds.end(); sit++) {
             KeyFrame* pChild = *sit;
             if (!pChild || pChild->isBad()) continue;
 
@@ -157,11 +168,13 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
                 Sophus::SE3f Tchildc = pChild->GetPose() * Twc;
                 pChild->mTcwGBA = Tchildc * pKF->mTcwGBA;
 
-                Sophus::SO3f Rcor = pChild->mTcwGBA.so3().inverse() * pChild->GetPose().so3();
+                Sophus::SO3f Rcor =
+                    pChild->mTcwGBA.so3().inverse() * pChild->GetPose().so3();
                 if (pChild->isVelocitySet()) {
                     pChild->mVwbGBA = Rcor * pChild->GetVelocity();
                 } else {
-                    Verbose::PrintMess("Child velocity empty!! ", Verbose::VERBOSITY_NORMAL);
+                    Verbose::PrintMess("Child velocity empty!! ",
+                                       Verbose::VERBOSITY_NORMAL);
                 }
 
                 pChild->mBiasGBA = pChild->GetImuBias();
@@ -214,7 +227,9 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     mnKFs = vpKF.size();
     mIdxInit++;
 
-    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(), lend = mlNewKeyFrames.end(); lit != lend; lit++) {
+    for (list<KeyFrame*>::iterator lit = mlNewKeyFrames.begin(),
+                                   lend = mlNewKeyFrames.end();
+         lit != lend; lit++) {
         (*lit)->SetBadFlag();
         delete *lit;
     }
