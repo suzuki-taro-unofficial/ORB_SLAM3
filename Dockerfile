@@ -36,4 +36,5 @@ RUN git clone \
     make -j && \
     sudo make install
 
+# Examples doesn't works without this
 RUN ldconfig
