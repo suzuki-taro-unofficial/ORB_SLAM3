@@ -44,9 +44,9 @@ class GeometricCamera {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & mnId;
-        ar & mnType;
-        ar & mvParameters;
+        ar& mnId;
+        ar& mnType;
+        ar& mvParameters;
     }
 
 public:

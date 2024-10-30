@@ -58,8 +58,8 @@ class Atlas {
         // Save/load a set structure, the set structure is broken in
         // libboost 1.58 for ubuntu 16.04, a vector is serializated
         // ar & mspMaps;
-        ar & mvpBackupMaps;
-        ar & mvpCameras;
+        ar& mvpBackupMaps;
+        ar& mvpCameras;
         // Need to save/load the static Id from Frame, KeyFrame, MapPoint and
         // Map
         ar& Map::nNextId;
@@ -67,7 +67,7 @@ class Atlas {
         ar& KeyFrame::nNextId;
         ar& MapPoint::nNextId;
         ar& GeometricCamera::nNextId;
-        ar & mnLastInitKFidMap;
+        ar& mnLastInitKFidMap;
     }
 
 public:

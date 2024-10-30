@@ -44,10 +44,10 @@ class MapPoint {
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & mnId;
-        ar & mnFirstKFid;
-        ar & mnFirstFrame;
-        ar & nObs;
+        ar& mnId;
+        ar& mnFirstKFid;
+        ar& mnFirstFrame;
+        ar& nObs;
         // Variables used by the tracking
         // ar & mTrackProjX;
         // ar & mTrackProjY;
@@ -85,18 +85,18 @@ class MapPoint {
                                              mNormalVector.size());
         // ar & BOOST_SERIALIZATION_NVP(mBackupObservationsId);
         // ar & mObservations;
-        ar & mBackupObservationsId1;
-        ar & mBackupObservationsId2;
+        ar& mBackupObservationsId1;
+        ar& mBackupObservationsId2;
         serializeMatrix(ar, mDescriptor, version);
-        ar & mBackupRefKFId;
+        ar& mBackupRefKFId;
         // ar & mnVisible;
         // ar & mnFound;
 
-        ar & mbBad;
-        ar & mBackupReplacedId;
+        ar& mbBad;
+        ar& mBackupReplacedId;
 
-        ar & mfMinDistance;
-        ar & mfMaxDistance;
+        ar& mfMinDistance;
+        ar& mfMaxDistance;
     }
 
 public:
