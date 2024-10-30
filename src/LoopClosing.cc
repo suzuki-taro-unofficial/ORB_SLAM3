@@ -223,7 +223,7 @@ bool LoopClosing::CheckNewKeyFrames() {
 }
 
 /**
- *現在のキーフレームが過去のキーフレームと共通の領域を持っているかどうか検出する。
+ *マージとループの検出を行う。
  *検出できたらtrueを返す。
  */
 bool LoopClosing::NewDetectCommonRegions() {
@@ -1553,8 +1553,7 @@ void LoopClosing::MergeLocal2() {
 
         mpLocalMapper->EmptyQueue();
 
-        bool bScaleVel = false;
-        if (s_on != 1) bScaleVel = true;
+        bool bScaleVel = (s_on != 1);
         mpAtlas->GetCurrentMap()->ApplyScaledRotation(T_on, s_on, bScaleVel);
         mpTracker->UpdateFrameIMU(s_on, mpCurrentKF->GetImuBias(),
                                   mpTracker->GetLastKeyFrame());
