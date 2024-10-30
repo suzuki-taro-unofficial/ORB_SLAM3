@@ -78,7 +78,7 @@ void LoopClosing::Run() {
             if (bFindedRegion) {
                 if (mbMergeDetected) {
                     /// IMUを使用していてIMUが初期化されていない場合、処理を中断する。
-                    if (CheckUseIMU() &&
+                    if (IsUseIMU() &&
                         (!mpCurrentKF->GetMap()->isImuInitialized())) {
                         cout << "IMU is not initilized, merge is aborted"
                              << endl;
@@ -105,7 +105,7 @@ void LoopClosing::Run() {
                                 continue;
                             }
                             // If inertial, force only yaw
-                            if (CheckUseIMU() &&
+                            if (IsUseIMU() &&
                                 mpCurrentKF->GetMap()->GetIniertialBA1()) {
                                 Eigen::Vector3d phi = LogSO3(
                                     mSold_new.rotation().toRotationMatrix());
@@ -123,7 +123,7 @@ void LoopClosing::Run() {
 
                         /// マージの実行
                         // TODO UNCOMMENT
-                        if (CheckUseIMU())
+                        if (IsUseIMU())
                             MergeLocal2();
                         else
                             MergeLocal();
@@ -169,7 +169,7 @@ void LoopClosing::Run() {
                             fabs(phi(2)) < 0.349f) {
                             if (mpCurrentKF->GetMap()->IsInertial()) {
                                 // If inertial, force only yaw
-                                if (CheckUseIMU() &&
+                                if (IsUseIMU() &&
                                     mpCurrentKF->GetMap()->GetIniertialBA2()) {
                                     phi(0) = 0;
                                     phi(1) = 0;
@@ -234,7 +234,11 @@ bool LoopClosing::NewDetectCommonRegions() {
     // キーフレームの取り出し
     SetCurrentKF();
 
-    if (CheckSkipCondition()) return false;
+    if (CheckSkipCondition()) {
+        mpKeyFrameDB->add(mpCurrentKF);
+        mpCurrentKF->SetErase();
+        return false;
+    }
 
     // Check the last candidates with geometric validation
     //  Loop candidates
@@ -365,15 +369,11 @@ bool LoopClosing::NewDetectCommonRegions() {
 bool LoopClosing::CheckSkipCondition() {
     /// IMUを用いていて、現在のマップに対しIMU最適化が十分行われていない場合に処理をスキップする
     if (mpLastMap->IsInertial() && !mpLastMap->GetIniertialBA2()) {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
         return true;
     }
 
     /// キーフレームの数が12未満なら処理をスキップする。
     if (mpLastMap->GetAllKeyFrames().size() < 12) {
-        mpKeyFrameDB->add(mpCurrentKF);
-        mpCurrentKF->SetErase();
         return true;
     }
 
@@ -824,7 +824,7 @@ void LoopClosing::CorrectLoop() {
     mpLocalMapper->EmptyQueue();  // Proccess keyframes in the queue
 
     // If a Global Bundle Adjustment is running, abort it
-    StopGBA();
+    StopGBAIfRunning();
 
     // Wait until Local Mapping has effectively stopped
     while (!mpLocalMapper->isStopped()) {
@@ -1044,7 +1044,7 @@ void LoopClosing::MergeLocal() {
     bool bRelaunchBA = false;
 
     //  If a Global Bundle Adjustment is running, abort it
-    StopGBA();
+    StopGBAIfRunning();
 
     //ローカルマッピングに停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
@@ -1370,7 +1370,7 @@ void LoopClosing::MergeLocal() {
               std::back_inserter(vpLocalCurrentWindowKFs));
     std::copy(spMergeConnectedKFs.begin(), spMergeConnectedKFs.end(),
               std::back_inserter(vpMergeConnectedKFs));
-    if (CheckUseIMU()) {
+    if (IsUseIMU()) {
         Optimizer::MergeInertialBA(mpCurrentKF, mpMergeMatchedKF, &bStop,
                                    pCurrentMap, vCorrectedSim3);
     } else {
@@ -1533,7 +1533,7 @@ void LoopClosing::MergeLocal2() {
     // NonCorrectedSim3[mpCurrentKF]=mg2oLoopScw;
 
     //  If a Global Bundle Adjustment is running, abort it
-    StopGBA();
+    StopGBAIfRunning();
 
     mpLocalMapper->RequestStop();
     // Wait until Local Mapping has effectively stopped
@@ -1561,7 +1561,7 @@ void LoopClosing::MergeLocal2() {
 
     const int numKFnew = pCurrentMap->KeyFramesInMap();
 
-    if (CheckUseIMU() && !pCurrentMap->GetIniertialBA2()) {
+    if (IsUseIMU() && !pCurrentMap->GetIniertialBA2()) {
         // Map is not completly initialized
         Eigen::Vector3d bg, ba;
         bg << 0., 0., 0.;
@@ -1700,7 +1700,7 @@ void LoopClosing::MergeLocal2() {
 }
 
 // Added
-void LoopClosing::StopGBA() {
+void LoopClosing::StopGBAIfRunning() {
     if (isRunningGBA()) {
         cout << "Stoping Global Bundle Adjustment...";
         unique_lock<mutex> lock(mMutexGBA);
@@ -2042,7 +2042,7 @@ bool LoopClosing::CheckFinish() {
 }
 
 // added
-bool LoopClosing::CheckUseIMU() {
+bool LoopClosing::IsUseIMU() {
     if (mpTracker->mSensor == System::IMU_MONOCULAR ||
         mpTracker->mSensor == System::IMU_STEREO ||
         mpTracker->mSensor == System::IMU_RGBD)

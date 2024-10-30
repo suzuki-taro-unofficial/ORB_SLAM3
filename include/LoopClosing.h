@@ -152,7 +152,7 @@ protected:
     void MergeLocal();
     void MergeLocal2();
 
-    void StopGBA();  // added
+    void StopGBAIfRunning();  // added
     void CheckObservations(set<KeyFrame*>& spKFsMap1,
                            set<KeyFrame*>& spKFsMap2);
 
@@ -167,7 +167,7 @@ protected:
     void ResetMergeVariable();  // added
 
     bool CheckFinish();
-    bool CheckUseIMU();  // added
+    bool IsUseIMU();  // added
     void SetFinish();
     bool mbFinishRequested;
     bool mbFinished;
