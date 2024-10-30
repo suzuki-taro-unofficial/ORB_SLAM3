@@ -98,3 +98,6 @@ borrar/*
 
 /dataset
 /*.log
+
+!Makefile
+!Dockerfile
