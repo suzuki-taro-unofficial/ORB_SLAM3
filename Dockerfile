@@ -36,4 +36,4 @@ RUN git clone \
     make -j && \
     sudo make install
 
-RUN sudo ldconfig
+RUN ldconfig
