@@ -2043,12 +2043,9 @@ bool LoopClosing::CheckFinish() {
 
 // added
 bool LoopClosing::IsUseIMU() {
-    if (mpTracker->mSensor == System::IMU_MONOCULAR ||
-        mpTracker->mSensor == System::IMU_STEREO ||
-        mpTracker->mSensor == System::IMU_RGBD)
-        return true;
-
-    return false;
+    return (mpTracker->mSensor == System::IMU_MONOCULAR ||
+            mpTracker->mSensor == System::IMU_STEREO ||
+            mpTracker->mSensor == System::IMU_RGBD);
 }
 
 /// finishにロック
