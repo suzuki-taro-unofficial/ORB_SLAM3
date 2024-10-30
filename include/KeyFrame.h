@@ -402,6 +402,8 @@ public:
     const int mnMaxY;
 
     // Preintegrated IMU measurements from previous keyframe
+
+    /// Mapが切り替わったあと最初のKFのmPrevKFはNull
     KeyFrame* mPrevKF;
     KeyFrame* mNextKF;
 

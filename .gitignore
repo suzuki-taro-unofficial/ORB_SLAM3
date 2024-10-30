@@ -95,3 +95,9 @@ borrar/*
 .vscode/
 
 /.cache
+
+/dataset
+/*.log
+
+!Makefile
+!Dockerfile

@@ -2403,6 +2403,10 @@ int Optimizer::OptimizeSim3(KeyFrame* pKF1, KeyFrame* pKF2,
     return nIn;
 }
 
+/**
+ * IMUが使える場合のLocalBA
+ * 引数のnum_fixedKF, num_optKF, num_MPs, num_edgedは使われない
+ */
 void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
                                 int& num_fixedKF, int& num_OptKF, int& num_MPs,
                                 int& num_edges, bool bLarge, bool bRecInit) {

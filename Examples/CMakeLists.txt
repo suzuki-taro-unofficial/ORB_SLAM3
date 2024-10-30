@@ -1,0 +1,7 @@
+add_subdirectory(Calibration)
+add_subdirectory(Monocular)
+add_subdirectory(Monocular-Inertial)
+add_subdirectory(Stereo)
+add_subdirectory(Stereo-Inertial)
+add_subdirectory(RGB-D)
+add_subdirectory(RGB-D-Inertial)

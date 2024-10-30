@@ -38,7 +38,7 @@ class Settings;
 class MapDrawer {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    MapDrawer(Atlas *pAtlas, const string &strSettingPath, Settings *settings);
+    MapDrawer(Atlas *pAtlas, Settings *settings);
 
     void newParameterLoader(Settings *settings);
 
@@ -54,8 +54,6 @@ public:
                                       pangolin::OpenGlMatrix &MOw);
 
 private:
-    bool ParseViewerParamFile(cv::FileStorage &fSettings);
-
     float mKeyFrameSize;
     float mKeyFrameLineWidth;
     float mGraphLineWidth;
