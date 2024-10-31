@@ -24,10 +24,10 @@ add_library(${PROJECT_NAME} SHARED
     Viewer.cc
     ImuTypes.cc
     G2oTypes.cc
-    CameraModels/Pinhole.cpp
-    CameraModels/KannalaBrandt8.cpp
-    OptimizableTypes.cpp
-    MLPnPsolver.cpp
+    CameraModels/Pinhole.cc
+    CameraModels/KannalaBrandt8.cc
+    OptimizableTypes.cc
+    MLPnPsolver.cc
     GeometricTools.cc
     TwoViewReconstruction.cc
     Config.cc
