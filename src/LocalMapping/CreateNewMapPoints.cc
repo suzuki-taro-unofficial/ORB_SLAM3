@@ -1,7 +1,13 @@
+#include "Atlas.h"
+#include "GeometricCamera.h"
+#include "GeometricTools.h"
 #include "LocalMapping.h"
+#include "Map.h"
 #include "ORBmatcher.h"
+#include "Tracking.h"
 
 namespace ORB_SLAM3 {
+
 void LocalMapping::CreateNewMapPoints() {
     // Retrieve neighbor keyframes in covisibility graph
     // retrieve 取り出す

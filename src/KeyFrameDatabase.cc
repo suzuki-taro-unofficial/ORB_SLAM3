@@ -23,7 +23,9 @@
 
 #include <mutex>
 
+#include "Frame.h"
 #include "KeyFrame.h"
+#include "Map.h"
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 
 using namespace std;

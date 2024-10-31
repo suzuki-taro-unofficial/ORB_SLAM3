@@ -1,9 +1,11 @@
+#include "Atlas.h"
 #include "KeyFrame.h"
 #include "LocalMapping.h"
 #include "Optimizer.h"
 #include "Tracking.h"
 
 namespace ORB_SLAM3 {
+
 void LocalMapping::Run() {
     mbFinished = false;
 

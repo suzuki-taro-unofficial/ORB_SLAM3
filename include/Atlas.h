@@ -22,27 +22,24 @@
 #ifndef ATLAS_H
 #define ATLAS_H
 
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/vector.hpp>
-#include <mutex>
+#include <Eigen/Core>
+#include <boost/serialization/access.hpp>
 #include <set>
+#include <vector>
 
+#include "Frame.h"
 #include "GeometricCamera.h"
 #include "KannalaBrandt8.h"
 #include "KeyFrame.h"
 #include "Map.h"
 #include "MapPoint.h"
+#include "ORBVocabulary.h"
 #include "Pinhole.h"
 
 namespace ORB_SLAM3 {
+
 class Viewer;
-class Map;
-class MapPoint;
-class KeyFrame;
 class KeyFrameDatabase;
-class Frame;
-class KannalaBrandt8;
-class Pinhole;
 
 // BOOST_CLASS_EXPORT_GUID(Pinhole, "Pinhole")
 // BOOST_CLASS_EXPORT_GUID(KannalaBrandt8, "KannalaBrandt8")
@@ -58,8 +55,8 @@ class Atlas {
         // Save/load a set structure, the set structure is broken in
         // libboost 1.58 for ubuntu 16.04, a vector is serializated
         // ar & mspMaps;
-        ar& mvpBackupMaps;
-        ar& mvpCameras;
+        ar & mvpBackupMaps;
+        ar & mvpCameras;
         // Need to save/load the static Id from Frame, KeyFrame, MapPoint and
         // Map
         ar& Map::nNextId;
@@ -67,7 +64,7 @@ class Atlas {
         ar& KeyFrame::nNextId;
         ar& MapPoint::nNextId;
         ar& GeometricCamera::nNextId;
-        ar& mnLastInitKFidMap;
+        ar & mnLastInitKFidMap;
     }
 
 public:
@@ -106,7 +103,7 @@ public:
     std::vector<MapPoint*> GetAllMapPoints();
     std::vector<MapPoint*> GetReferenceMapPoints();
 
-    vector<Map*> GetAllMaps();
+    std::vector<Map*> GetAllMaps();
 
     int CountMaps();
 
@@ -128,7 +125,7 @@ public:
     void PreSave();
     void PostLoad();
 
-    map<long unsigned int, KeyFrame*> GetAtlasKeyframes();
+    std::map<long unsigned int, KeyFrame*> GetAtlasKeyframes();
 
     void SetKeyFrameDababase(KeyFrameDatabase* pKFDB);
     KeyFrameDatabase* GetKeyFrameDatabase();

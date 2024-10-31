@@ -23,6 +23,10 @@
 
 #include <mutex>
 
+#include "KeyFrame.h"
+#include "KeyFrameDatabase.h"
+#include "MapPoint.h"
+
 namespace ORB_SLAM3 {
 
 long unsigned int Map::nNextId = 0;

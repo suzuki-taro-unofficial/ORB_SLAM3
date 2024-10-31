@@ -22,29 +22,20 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include <mutex>
-#include <opencv2/opencv.hpp>
-#include <vector>
+#include <opencv2/core/mat.hpp>
 
-#include "Converter.h"
-#include "Eigen/Core"
+#include "G2oTypes.h"
 #include "ImuTypes.h"
 #include "ORBVocabulary.h"
-#include "Settings.h"
-#include "Thirdparty/DBoW2/DBoW2/BowVector.h"
-#include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
-#include "Thirdparty/Sophus/sophus/geometry.hpp"
-#include "sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
+
 #define FRAME_GRID_ROWS 48
 #define FRAME_GRID_COLS 64
 
-class MapPoint;
-class KeyFrame;
-class ConstraintPoseImu;
-class GeometricCamera;
 class ORBextractor;
+class GeometricCamera;
+class MapPoint;
 
 /**
  * 入力とそれに伴うORB特徴量の管理を行う。

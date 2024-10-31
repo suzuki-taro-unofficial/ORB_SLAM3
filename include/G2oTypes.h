@@ -22,8 +22,6 @@
 #ifndef G2OTYPES_H
 #define G2OTYPES_H
 
-#include <Frame.h>
-#include <KeyFrame.h>
 #include <math.h>
 
 #include <Eigen/Core>
@@ -31,7 +29,7 @@
 #include <Eigen/Geometry>
 #include <opencv2/core/core.hpp>
 
-#include "Converter.h"
+#include "ImuTypes.h"
 #include "Thirdparty/g2o/g2o/core/base_binary_edge.h"
 #include "Thirdparty/g2o/g2o/core/base_multi_edge.h"
 #include "Thirdparty/g2o/g2o/core/base_unary_edge.h"
