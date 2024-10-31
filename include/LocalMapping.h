@@ -100,8 +100,6 @@ public:
     double GetCurrKFTime();
     KeyFrame* GetCurrKF();
 
-    std::mutex mMutexImuInit;
-
     Eigen::MatrixXd mcovInertial;
     Eigen::Matrix3d mRwg;
     Eigen::Vector3d mbg;
