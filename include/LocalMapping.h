@@ -106,6 +106,13 @@ public:
      */
     Eigen::MatrixXd mcovInertial;
     Eigen::Matrix3d mRwg;
+    /**
+     * LocalMapping::InitializeIMUで書き込まれ、
+     * そのままOptimizer::InertialOptimizationに渡される。
+     * 書き込みするのに条件がかかっているので、ただのメモではない？
+     *
+     * あとはSystemによってファイルに保存される
+     */
     Eigen::Vector3d mbg;
     Eigen::Vector3d mba;
     double mScale;
