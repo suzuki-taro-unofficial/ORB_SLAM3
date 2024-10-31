@@ -79,6 +79,12 @@ bool LocalMapping::CheckNewKeyFrames() {
     return (!mlNewKeyFrames.empty());
 }
 
+/**
+ * - KFのBoWの計算
+ * - マップポイントの取得と処理
+ * - Covisibility Graphの更新
+ * - AtlasにKFを追加
+ */
 void LocalMapping::ProcessNewKeyFrame() {
     {
         unique_lock<mutex> lock(mMutexNewKFs);
@@ -95,18 +101,16 @@ void LocalMapping::ProcessNewKeyFrame() {
 
     for (size_t i = 0; i < vpMapPointMatches.size(); i++) {
         MapPoint* pMP = vpMapPointMatches[i];
-        if (pMP) {
-            if (!pMP->isBad()) {
-                if (!pMP->IsInKeyFrame(mpCurrentKeyFrame)) {
-                    pMP->AddObservation(mpCurrentKeyFrame, i);
-                    pMP->UpdateNormalAndDepth();
-                    pMP->ComputeDistinctiveDescriptors();
-                } else  // this can only happen for new stereo points inserted
-                        // by the Tracking
-                {
-                    mlpRecentAddedMapPoints.push_back(pMP);
-                }
-            }
+        if (!pMP || pMP->isBad()) continue;
+
+        if (!pMP->IsInKeyFrame(mpCurrentKeyFrame)) {
+            pMP->AddObservation(mpCurrentKeyFrame, i);
+            pMP->UpdateNormalAndDepth();
+            pMP->ComputeDistinctiveDescriptors();
+        } else  // this can only happen for new stereo points inserted
+                // by the Tracking
+        {
+            mlpRecentAddedMapPoints.push_back(pMP);
         }
     }
 
