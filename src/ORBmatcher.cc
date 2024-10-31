@@ -831,6 +831,9 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2,
     return nmatches;
 }
 
+/**
+ * vMatchedPairsに副作用
+ */
 int ORBmatcher::SearchForTriangulation(
     KeyFrame *pKF1, KeyFrame *pKF2,
     vector<pair<size_t, size_t> > &vMatchedPairs, const bool bOnlyStereo,
