@@ -333,7 +333,6 @@ void LocalMapping::ScaleRefinement() {
     // Minimum number of keyframes to compute a solution
     // Minimum time (seconds) between first and last keyframe to compute a
     // solution. Make the difference between monocular and stereo
-    // unique_lock<mutex> lock0(mMutexImuInit);
     if (mbResetRequested) return;
 
     while (CheckNewKeyFrames()) {
