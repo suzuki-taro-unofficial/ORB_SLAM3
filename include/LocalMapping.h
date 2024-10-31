@@ -138,8 +138,20 @@ public:
      */
     double mCostTime;
 
+    /**
+     * SaveDebugDataでセーブ時のファイル名の一部として使われる。
+     * 0で初期化された後、変更されない
+     */
     unsigned int mInitSect;
+    /**
+     * マップがリセットされると0で初期化され、InitializeIMUが呼ばれるとインクリメントする。
+     *
+     * 使われない。
+     */
     unsigned int mIdxInit;
+    /**
+     * InitializeIMUで書き込まれるが読み取られない。
+     */
     unsigned int mnKFs;
     /// Mapで最初のKFの時間
     /// - `InitializeIMU` を実行時に設定され、Systemが読み込む
