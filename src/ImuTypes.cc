@@ -23,9 +23,6 @@
 
 #include <iostream>
 
-#include "Converter.h"
-#include "GeometricTools.h"
-
 namespace ORB_SLAM3 {
 
 namespace IMU {

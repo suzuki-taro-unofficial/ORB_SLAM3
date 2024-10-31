@@ -22,17 +22,14 @@
 #ifndef KEYFRAMEDATABASE_H
 #define KEYFRAMEDATABASE_H
 
+#include <Eigen/Core>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/vector.hpp>
 #include <list>
 #include <mutex>
-#include <set>
 #include <vector>
 
-#include "Frame.h"
-#include "KeyFrame.h"
-#include "Map.h"
 #include "ORBVocabulary.h"
 
 namespace ORB_SLAM3 {
@@ -46,7 +43,7 @@ class KeyFrameDatabase {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar& mvBackupInvertedFileId;
+        ar & mvBackupInvertedFileId;
     }
 
 public:

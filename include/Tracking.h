@@ -22,28 +22,19 @@
 #ifndef TRACKING_H
 #define TRACKING_H
 
+#include <Eigen/Core>
 #include <mutex>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
-#include <unordered_set>
 
-#include "Atlas.h"
 #include "Frame.h"
-#include "FrameDrawer.h"
-#include "GeometricCamera.h"
 #include "ImuTypes.h"
-#include "KeyFrameDatabase.h"
-#include "LocalMapping.h"
-#include "LoopClosing.h"
-#include "MapDrawer.h"
 #include "ORBVocabulary.h"
-#include "ORBextractor.h"
-#include "Settings.h"
-#include "System.h"
-#include "Viewer.h"
+#include "Thirdparty/Sophus/sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 
+class System;
 class Viewer;
 class FrameDrawer;
 class Atlas;
@@ -51,6 +42,10 @@ class LocalMapping;
 class LoopClosing;
 class System;
 class Settings;
+class KeyFrameDatabase;
+class MapDrawer;
+class KeyFrame;
+class Map;
 
 class Tracking {
 public:

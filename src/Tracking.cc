@@ -26,10 +26,13 @@
 
 #include "FrameDrawer.h"
 #include "G2oTypes.h"
+#include "GeometricCamera.h"
 #include "GeometricTools.h"
 #include "MLPnPsolver.h"
+#include "ORBextractor.h"
 #include "ORBmatcher.h"
 #include "Optimizer.h"
+#include "System.h"
 
 using namespace std;
 

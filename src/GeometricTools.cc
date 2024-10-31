@@ -21,6 +21,7 @@
 
 #include "GeometricTools.h"
 
+#include "GeometricCamera.h"
 #include "KeyFrame.h"
 
 namespace ORB_SLAM3 {

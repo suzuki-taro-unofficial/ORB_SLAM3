@@ -26,7 +26,6 @@
 // place recognition).
 // #define REGISTER_TIMES
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 

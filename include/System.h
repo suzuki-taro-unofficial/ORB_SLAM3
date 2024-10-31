@@ -22,7 +22,6 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 

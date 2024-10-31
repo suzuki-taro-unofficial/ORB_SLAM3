@@ -27,6 +27,7 @@
 
 #include "CameraModels/KannalaBrandt8.h"
 #include "CameraModels/Pinhole.h"
+#include "Converter.h"
 #include "System.h"
 
 using namespace std;

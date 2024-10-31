@@ -26,13 +26,12 @@
 
 #include <mutex>
 
-#include "Atlas.h"
-#include "KeyFrame.h"
-#include "MapPoint.h"
-#include "Settings.h"
+#include "Thirdparty/Sophus/sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 
+class Atlas;
+class KeyFrame;
 class Settings;
 
 class MapDrawer {
