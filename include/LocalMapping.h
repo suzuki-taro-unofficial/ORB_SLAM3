@@ -116,6 +116,9 @@ public:
      * あとはSystemによってファイルに保存される
      */
     Eigen::Vector3d mbg;
+    /**
+     * ほぼ同上、ただし加速度のバイアス
+     */
     Eigen::Vector3d mba;
     double mScale;
     double mInitTime;
