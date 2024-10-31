@@ -135,14 +135,7 @@ void LocalMapping::MapPointCulling() {
     list<MapPoint*>::iterator lit = mlpRecentAddedMapPoints.begin();
     const unsigned long int nCurrentKFid = mpCurrentKeyFrame->mnId;
 
-    int nThObs;
-    if (mbMonocular)
-        nThObs = 2;
-    else
-        nThObs = 3;
-    const int cnThObs = nThObs;
-
-    int borrar = mlpRecentAddedMapPoints.size();
+    const int cnThObs = mbMonocular ? 2 : 3;
 
     while (lit != mlpRecentAddedMapPoints.end()) {
         MapPoint* pMP = *lit;
@@ -160,7 +153,6 @@ void LocalMapping::MapPointCulling() {
             lit = mlpRecentAddedMapPoints.erase(lit);
         else {
             lit++;
-            borrar--;
         }
     }
 }
@@ -341,7 +333,6 @@ void LocalMapping::ScaleRefinement() {
     // Minimum number of keyframes to compute a solution
     // Minimum time (seconds) between first and last keyframe to compute a
     // solution. Make the difference between monocular and stereo
-    // unique_lock<mutex> lock0(mMutexImuInit);
     if (mbResetRequested) return;
 
     while (CheckNewKeyFrames()) {

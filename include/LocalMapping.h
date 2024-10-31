@@ -100,18 +100,59 @@ public:
     double GetCurrKFTime();
     KeyFrame* GetCurrKF();
 
-    std::mutex mMutexImuInit;
-
+    /**
+     * System::SaveDebugDataでtxtファイルに出力されるが、
+     * 初期化も書き込みもされないため意味はなさそう。
+     */
     Eigen::MatrixXd mcovInertial;
+    // TODO: 読む
     Eigen::Matrix3d mRwg;
+    /**
+     * current KFから取得したジャイロのバイアスが保持される。
+     *
+     * LocalMapping::InitializeIMUで書き込まれ、
+     * そのままOptimizer::InertialOptimizationに渡される。
+     * 書き込みするのに条件がかかっているので、ただのメモではない？
+     *
+     * あとはSystemによってファイルに保存される
+     */
     Eigen::Vector3d mbg;
+    /**
+     * ほぼ同上、ただし加速度のバイアス
+     */
     Eigen::Vector3d mba;
+    /**
+     * スケール、拡大縮小の情報が入る。
+     *
+     * 使用する前に必ず1.0で初期化されOptimizerによって最適化された値を使用するため、
+     * メンバ変数ではなくローカルな変数に変更可能。SaveDebugDataで読み取られることを除けば
+     */
     double mScale;
+    /**
+     * LocalMapping::InitializeIMUから書き込まれ,SaveDebugDataで読み取られる
+     */
     double mInitTime;
+    /**
+     * 書き込みは行われない。SaveDebugDataで読み取られる
+     *
+     * 消してよさそう
+     */
     double mCostTime;
 
+    /**
+     * SaveDebugDataでセーブ時のファイル名の一部として使われる。
+     * 0で初期化された後、変更されない
+     */
     unsigned int mInitSect;
+    /**
+     * マップがリセットされると0で初期化され、InitializeIMUが呼ばれるとインクリメントする。
+     *
+     * 使われない。
+     */
     unsigned int mIdxInit;
+    /**
+     * InitializeIMUで書き込まれるが読み取られない。
+     */
     unsigned int mnKFs;
     /// Mapで最初のKFの時間
     /// - `InitializeIMU` を実行時に設定され、Systemが読み込む
@@ -119,17 +160,42 @@ public:
     /// - 両者とも、Mapで最初のKFの時間を設定している。
     /// - Trackingから設定される方が先なはず。
     double mFirstTs;
+    /**
+     * Tracking.mnMatchesInliersが書き込まれるが、使われない
+     */
     int mnMatchesInliers;
 
     // For debugging (erase in normal mode)
+
+    /**
+     * System側でinitFrが書き込まれるが使われない
+     */
     int mInitFr;
+    /**
+     * 初期化するだけで使われない
+     */
     int mIdxIteration;
+    /**
+     * 初期化すらされない
+     */
     std::string strSequence;
 
+    /**
+     * trueで初期化され、trueが書き込まれる。
+     * 読まれない。
+     */
     bool mbNotBA1;
+    /**
+     * trueで初期化され、trueが書き込まれる。
+     * 読まれない。
+     * 頭がおかしくなりそう。
+     */
     bool mbNotBA2;
     bool mbBadImu;
 
+    /**
+     * 書き込まれない、読まれない
+     */
     bool mbWriteStats;
 
     // not consider far points (clouds)

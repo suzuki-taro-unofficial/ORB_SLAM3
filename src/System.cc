@@ -952,6 +952,8 @@ void System::SaveDebugData(const int& initIdx) {
                to_string(initIdx) + ".txt",
            ios_base::app);
     f << fixed;
+    // mCovInertialは一切書き込みが行われない（初期化も）ので常に不定
+    // TODO: できれば消したい
     for (int i = 0; i < mpLocalMapper->mcovInertial.rows(); i++) {
         for (int j = 0; j < mpLocalMapper->mcovInertial.cols(); j++) {
             if (j != 0) f << ",";
