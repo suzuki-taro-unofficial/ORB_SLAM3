@@ -159,14 +159,36 @@ public:
     /// - 両者とも、Mapで最初のKFの時間を設定している。
     /// - Trackingから設定される方が先なはず。
     double mFirstTs;
+    /**
+     * Tracking.mnMatchesInliersが書き込まれるが、使われない
+     */
     int mnMatchesInliers;
 
     // For debugging (erase in normal mode)
+
+    /**
+     * System.initFrが書き込まれるが使われない
+     */
     int mInitFr;
+    /**
+     * 初期化するだけで使われない
+     */
     int mIdxIteration;
+    /**
+     * 初期化すらされない
+     */
     std::string strSequence;
 
+    /**
+     * trueで初期化され、trueが書き込まれる。
+     * 読まれない。
+     */
     bool mbNotBA1;
+    /**
+     * trueで初期化され、trueが書き込まれる。
+     * 読まれない。
+     * 頭がおかしくなりそう。
+     */
     bool mbNotBA2;
     bool mbBadImu;
 
