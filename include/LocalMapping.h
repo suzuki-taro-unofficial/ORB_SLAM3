@@ -193,6 +193,9 @@ public:
     bool mbNotBA2;
     bool mbBadImu;
 
+    /**
+     * 書き込まれない、読まれない
+     */
     bool mbWriteStats;
 
     // not consider far points (clouds)
