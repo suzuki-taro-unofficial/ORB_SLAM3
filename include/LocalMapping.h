@@ -168,7 +168,7 @@ public:
     // For debugging (erase in normal mode)
 
     /**
-     * System.initFrが書き込まれるが使われない
+     * System側でinitFrが書き込まれるが使われない
      */
     int mInitFr;
     /**
