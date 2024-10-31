@@ -135,7 +135,7 @@ void LocalMapping::MapPointCulling() {
     list<MapPoint*>::iterator lit = mlpRecentAddedMapPoints.begin();
     const unsigned long int nCurrentKFid = mpCurrentKeyFrame->mnId;
 
-    const int nThObs = mbMonocular ? 2 : 3;
+    const int cnThObs = mbMonocular ? 2 : 3;
 
     while (lit != mlpRecentAddedMapPoints.end()) {
         MapPoint* pMP = *lit;
@@ -146,7 +146,7 @@ void LocalMapping::MapPointCulling() {
             pMP->SetBadFlag();
             lit = mlpRecentAddedMapPoints.erase(lit);
         } else if (((int)nCurrentKFid - (int)pMP->mnFirstKFid) >= 2 &&
-                   pMP->Observations() <= nThObs) {
+                   pMP->Observations() <= cnThObs) {
             pMP->SetBadFlag();
             lit = mlpRecentAddedMapPoints.erase(lit);
         } else if (((int)nCurrentKFid - (int)pMP->mnFirstKFid) >= 3)
