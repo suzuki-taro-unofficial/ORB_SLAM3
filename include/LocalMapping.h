@@ -100,6 +100,10 @@ public:
     double GetCurrKFTime();
     KeyFrame* GetCurrKF();
 
+    /**
+     * System::SaveDebugDataでtxtファイルに出力されるが、
+     * 初期化も書き込みもされないため意味はなさそう。
+     */
     Eigen::MatrixXd mcovInertial;
     Eigen::Matrix3d mRwg;
     Eigen::Vector3d mbg;
