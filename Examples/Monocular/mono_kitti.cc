@@ -64,8 +64,6 @@ int main(int argc, char **argv) {
     cout << "Images in the sequence: " << nImages << endl << endl;
 
     // Main loop
-    double t_resize = 0.f;
-    double t_track = 0.f;
 
     cv::Mat im;
     for (int ni = 0; ni < nImages; ni++) {

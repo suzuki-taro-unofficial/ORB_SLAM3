@@ -19,8 +19,6 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
-
 #include <algorithm>
 #include <chrono>
 #include <ctime>
@@ -30,6 +28,7 @@
 #include <sstream>
 
 #include "ImuTypes.h"
+#include "System.h"
 
 using namespace std;
 
@@ -133,9 +132,6 @@ int main(int argc, char **argv) {
     ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO,
                            true, 0, file_name);
     float imageScale = SLAM.GetImageScale();
-
-    double t_resize = 0.f;
-    double t_track = 0.f;
 
     int proccIm = 0;
     for (seq = 0; seq < num_seq; seq++) {
