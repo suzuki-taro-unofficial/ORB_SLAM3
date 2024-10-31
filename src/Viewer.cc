@@ -23,7 +23,10 @@
 
 #include <pangolin/pangolin.h>
 
-#include <mutex>
+#include <opencv2/highgui.hpp>
+
+#include "Settings.h"
+#include "System.h"
 
 namespace ORB_SLAM3 {
 

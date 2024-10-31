@@ -24,7 +24,12 @@
 #include <mutex>
 
 #include "Converter.h"
+#include "Frame.h"
+#include "GeometricCamera.h"
 #include "ImuTypes.h"
+#include "KeyFrameDatabase.h"
+#include "Map.h"
+#include "MapPoint.h"
 
 namespace ORB_SLAM3 {
 

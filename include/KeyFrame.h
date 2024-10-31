@@ -22,37 +22,31 @@
 #ifndef KEYFRAME_H
 #define KEYFRAME_H
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
-#include <mutex>
+#include <Eigen/Core>
+#include <boost/serialization/access.hpp>
+#include <map>
+#include <set>
 
-#include "Frame.h"
-#include "GeometricCamera.h"
 #include "ImuTypes.h"
-#include "KeyFrameDatabase.h"
-#include "MapPoint.h"
 #include "ORBVocabulary.h"
-#include "ORBextractor.h"
-#include "SerializationUtils.h"
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
+#include "Thirdparty/Sophus/sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 
+class Frame;
+class GeometricCamera;
+class KeyFrameDatabase;
 class Map;
 class MapPoint;
-class Frame;
-class KeyFrameDatabase;
-
-class GeometricCamera;
 
 class KeyFrame {
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar& mnId;
+        ar & mnId;
         ar& const_cast<long unsigned int&>(mnFrameId);
         ar& const_cast<double&>(mTimeStamp);
         // Grid
@@ -101,7 +95,7 @@ class KeyFrame {
         // ar & mnBALocalForMerge;
 
         // Scale
-        ar& mfScale;
+        ar & mfScale;
         // Calibration parameters
         ar& const_cast<float&>(fx);
         ar& const_cast<float&>(fy);
@@ -118,21 +112,21 @@ class KeyFrame {
         // KeyPoints
         serializeVectorKeyPoints<Archive>(ar, mvKeys, version);
         serializeVectorKeyPoints<Archive>(ar, mvKeysUn, version);
-        ar& const_cast<vector<float>&>(mvuRight);
-        ar& const_cast<vector<float>&>(mvDepth);
+        ar& const_cast<std::vector<float>&>(mvuRight);
+        ar& const_cast<std::vector<float>&>(mvDepth);
         serializeMatrix<Archive>(ar, mDescriptors, version);
         // BOW
-        ar& mBowVec;
-        ar& mFeatVec;
+        ar & mBowVec;
+        ar & mFeatVec;
         // Pose relative to parent
         serializeSophusSE3<Archive>(ar, mTcp, version);
         // Scale
         ar& const_cast<int&>(mnScaleLevels);
         ar& const_cast<float&>(mfScaleFactor);
         ar& const_cast<float&>(mfLogScaleFactor);
-        ar& const_cast<vector<float>&>(mvScaleFactors);
-        ar& const_cast<vector<float>&>(mvLevelSigma2);
-        ar& const_cast<vector<float>&>(mvInvLevelSigma2);
+        ar& const_cast<std::vector<float>&>(mvScaleFactors);
+        ar& const_cast<std::vector<float>&>(mvLevelSigma2);
+        ar& const_cast<std::vector<float>&>(mvInvLevelSigma2);
         // Image bounds and calibration
         ar& const_cast<int&>(mnMinX);
         ar& const_cast<int&>(mnMinY);
@@ -142,49 +136,49 @@ class KeyFrame {
         // Pose
         serializeSophusSE3<Archive>(ar, mTcw, version);
         // MapPointsId associated to keypoints
-        ar& mvBackupMapPointsId;
+        ar & mvBackupMapPointsId;
         // Grid
-        ar& mGrid;
+        ar & mGrid;
         // Connected KeyFrameWeight
-        ar& mBackupConnectedKeyFrameIdWeights;
+        ar & mBackupConnectedKeyFrameIdWeights;
         // Spanning Tree and Loop Edges
-        ar& mbFirstConnection;
-        ar& mBackupParentId;
-        ar& mvBackupChildrensId;
-        ar& mvBackupLoopEdgesId;
-        ar& mvBackupMergeEdgesId;
+        ar & mbFirstConnection;
+        ar & mBackupParentId;
+        ar & mvBackupChildrensId;
+        ar & mvBackupLoopEdgesId;
+        ar & mvBackupMergeEdgesId;
         // Bad flags
-        ar& mbNotErase;
-        ar& mbToBeErased;
-        ar& mbBad;
+        ar & mbNotErase;
+        ar & mbToBeErased;
+        ar & mbBad;
 
-        ar& mHalfBaseline;
+        ar & mHalfBaseline;
 
-        ar& mnOriginMapId;
+        ar & mnOriginMapId;
 
         // Camera variables
-        ar& mnBackupIdCamera;
-        ar& mnBackupIdCamera2;
+        ar & mnBackupIdCamera;
+        ar & mnBackupIdCamera2;
 
         // Fisheye variables
-        ar& mvLeftToRightMatch;
-        ar& mvRightToLeftMatch;
+        ar & mvLeftToRightMatch;
+        ar & mvRightToLeftMatch;
         ar& const_cast<int&>(NLeft);
         ar& const_cast<int&>(NRight);
         serializeSophusSE3<Archive>(ar, mTlr, version);
         serializeVectorKeyPoints<Archive>(ar, mvKeysRight, version);
-        ar& mGridRight;
+        ar & mGridRight;
 
         // Inertial variables
-        ar& mImuBias;
-        ar& mBackupImuPreintegrated;
-        ar& mImuCalib;
-        ar& mBackupPrevKFId;
-        ar& mBackupNextKFId;
-        ar& bImu;
+        ar & mImuBias;
+        ar & mBackupImuPreintegrated;
+        ar & mImuCalib;
+        ar & mBackupPrevKFId;
+        ar & mBackupNextKFId;
+        ar & bImu;
         ar& boost::serialization::make_array(mVw.data(), mVw.size());
         ar& boost::serialization::make_array(mOwb.data(), mOwb.size());
-        ar& mbHasVelocity;
+        ar & mbHasVelocity;
     }
 
 public:
@@ -239,7 +233,7 @@ public:
 
     // Merge Edges
     void AddMergeEdge(KeyFrame* pKF);
-    set<KeyFrame*> GetMergeEdges();
+    std::set<KeyFrame*> GetMergeEdges();
 
     // MapPoint observation functions
     int GetNumberMPs();
@@ -293,11 +287,11 @@ public:
     bool ProjectPointUnDistort(MapPoint* pMP, cv::Point2f& kp, float& u,
                                float& v);
 
-    void PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP,
-                 set<GeometricCamera*>& spCam);
-    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid,
-                  map<long unsigned int, MapPoint*>& mpMPid,
-                  map<unsigned int, GeometricCamera*>& mpCamId);
+    void PreSave(std::set<KeyFrame*>& spKF, std::set<MapPoint*>& spMP,
+                 std::set<GeometricCamera*>& spCam);
+    void PostLoad(std::map<long unsigned int, KeyFrame*>& mpKFid,
+                  std::map<long unsigned int, MapPoint*>& mpMPid,
+                  std::map<unsigned int, GeometricCamera*>& mpCamId);
 
     void SetORBVocabulary(ORBVocabulary* pORBVoc);
     void SetKeyFrameDatabase(KeyFrameDatabase* pKFDB);
@@ -412,7 +406,7 @@ public:
 
     unsigned int mnOriginMapId;
 
-    string mNameFile;
+    std::string mNameFile;
 
     int mnDataset;
 
@@ -547,8 +541,8 @@ public:
                     right++;
             }
         }
-        cout << "Point distribution in KeyFrame: left-> " << left
-             << " --- right-> " << right << endl;
+        std::cout << "Point distribution in KeyFrame: left-> " << left
+                  << " --- right-> " << right << std::endl;
     }
 };
 

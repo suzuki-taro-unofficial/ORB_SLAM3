@@ -23,6 +23,7 @@
 
 #include <mutex>
 
+#include "Map.h"
 #include "ORBmatcher.h"
 
 namespace ORB_SLAM3 {

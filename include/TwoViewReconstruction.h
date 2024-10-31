@@ -25,7 +25,6 @@
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>
 #include <sophus/se3.hpp>
-#include <unordered_set>
 
 namespace ORB_SLAM3 {
 

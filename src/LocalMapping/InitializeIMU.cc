@@ -1,7 +1,11 @@
+#include "Atlas.h"
 #include "LocalMapping.h"
 #include "Optimizer.h"
+#include "System.h"
+#include "Tracking.h"
 
 namespace ORB_SLAM3 {
+
 /**
  * InitializeIMUから切り出し
  * KFをprevKFで追っていって、古いものを先頭にした結果を返す

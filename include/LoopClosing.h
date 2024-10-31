@@ -24,21 +24,23 @@
 
 #include <boost/algorithm/string.hpp>
 #include <mutex>
+#include <set>
 #include <thread>
+#include <utility>
 
-#include "Atlas.h"
-#include "KeyFrame.h"
-#include "KeyFrameDatabase.h"
-#include "LocalMapping.h"
 #include "ORBVocabulary.h"
-#include "Tracking.h"
+#include "Thirdparty/g2o/g2o/types/sim3.h"
 
 namespace ORB_SLAM3 {
 
-class Tracking;
-class LocalMapping;
+class Atlas;
+class KeyFrame;
 class KeyFrameDatabase;
+class LocalMapping;
 class Map;
+class MapPoint;
+class Tracking;
+class Viewer;
 
 class LoopClosing {
 public:

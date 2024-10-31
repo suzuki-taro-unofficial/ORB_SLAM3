@@ -25,8 +25,10 @@
 
 #include <mutex>
 
+#include "Atlas.h"
 #include "KeyFrame.h"
 #include "MapPoint.h"
+#include "Settings.h"
 
 namespace ORB_SLAM3 {
 

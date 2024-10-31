@@ -29,6 +29,7 @@
 #include "ORBmatcher.h"
 #include "Optimizer.h"
 #include "Sim3Solver.h"
+#include "System.h"
 
 namespace ORB_SLAM3 {
 
@@ -1046,7 +1047,7 @@ void LoopClosing::MergeLocal() {
     //  If a Global Bundle Adjustment is running, abort it
     StopGBAIfRunning();
 
-    //ローカルマッピングに停止させる命令を出し、停止するのを待つ。
+    // ローカルマッピングに停止させる命令を出し、停止するのを待つ。
     mpLocalMapper->RequestStop();
     while (!mpLocalMapper->isStopped()) {
         usleep(1000);

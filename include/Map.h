@@ -25,45 +25,47 @@
 #include <pangolin/pangolin.h>
 
 #include <boost/serialization/base_object.hpp>
+#include <list>
 #include <mutex>
 #include <set>
 
-#include "KeyFrame.h"
-#include "MapPoint.h"
+#include "ORBVocabulary.h"
+#include "Thirdparty/Sophus/sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 
-class MapPoint;
-class KeyFrame;
 class Atlas;
+class GeometricCamera;
+class KeyFrame;
 class KeyFrameDatabase;
+class MapPoint;
 
 class Map {
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar& mnId;
-        ar& mnInitKFid;
-        ar& mnMaxKFid;
-        ar& mnBigChangeIdx;
+        ar & mnId;
+        ar & mnInitKFid;
+        ar & mnMaxKFid;
+        ar & mnBigChangeIdx;
 
         // Save/load a set structure, the set structure is broken in
         // libboost 1.58 for ubuntu 16.04, a vector is serializated
         // ar & mspKeyFrames;
         // ar & mspMapPoints;
-        ar& mvpBackupKeyFrames;
-        ar& mvpBackupMapPoints;
+        ar & mvpBackupKeyFrames;
+        ar & mvpBackupMapPoints;
 
-        ar& mvBackupKeyFrameOriginsId;
+        ar & mvBackupKeyFrameOriginsId;
 
-        ar& mnBackupKFinitialID;
-        ar& mnBackupKFlowerID;
+        ar & mnBackupKFinitialID;
+        ar & mnBackupKFlowerID;
 
-        ar& mbImuInitialized;
-        ar& mbIsInertial;
-        ar& mbIMU_BA1;
-        ar& mbIMU_BA2;
+        ar & mbImuInitialized;
+        ar & mbIsInertial;
+        ar & mbIMU_BA1;
+        ar & mbIMU_BA2;
     }
 
 public:

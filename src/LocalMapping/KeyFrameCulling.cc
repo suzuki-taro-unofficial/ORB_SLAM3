@@ -1,6 +1,9 @@
+#include "Atlas.h"
+#include "KeyFrame.h"
 #include "LocalMapping.h"
 
 namespace ORB_SLAM3 {
+
 /// 冗長なキーフレームのチェック（ローカルキーフレームのみ）
 /// そのキーフレームが見ているマップポイントの90%が、少なくとも他の3つのキーフレーム（同じか、より細かいスケール）で見ている場合、そのキーフレームは冗長とみなされます。
 void LocalMapping::KeyFrameCulling() {

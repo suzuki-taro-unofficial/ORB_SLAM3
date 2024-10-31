@@ -22,10 +22,10 @@
 #include "ORBmatcher.h"
 
 #include <limits.h>
-#include <stdint-gcc.h>
 
 #include <opencv2/core/core.hpp>
 
+#include "GeometricCamera.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
 
 using namespace std;

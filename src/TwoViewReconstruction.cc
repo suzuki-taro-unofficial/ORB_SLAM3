@@ -23,7 +23,6 @@
 
 #include <thread>
 
-#include "Converter.h"
 #include "GeometricTools.h"
 #include "Thirdparty/DBoW2/DUtils/Random.h"
 

@@ -22,13 +22,9 @@
 #ifndef VIEWER_H
 #define VIEWER_H
 
+#include <Eigen/Core>
 #include <mutex>
-
-#include "FrameDrawer.h"
-#include "MapDrawer.h"
-#include "Settings.h"
-#include "System.h"
-#include "Tracking.h"
+#include <opencv2/core/persistence.hpp>
 
 namespace ORB_SLAM3 {
 

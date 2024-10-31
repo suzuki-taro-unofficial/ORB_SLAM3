@@ -27,11 +27,8 @@
 #include <boost/serialization/serialization.hpp>
 #include <mutex>
 #include <opencv2/core/core.hpp>
+#include <set>
 
-#include "Converter.h"
-#include "Frame.h"
-#include "KeyFrame.h"
-#include "Map.h"
 #include "SerializationUtils.h"
 
 namespace ORB_SLAM3 {
@@ -44,10 +41,10 @@ class MapPoint {
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar& mnId;
-        ar& mnFirstKFid;
-        ar& mnFirstFrame;
-        ar& nObs;
+        ar & mnId;
+        ar & mnFirstKFid;
+        ar & mnFirstFrame;
+        ar & nObs;
         // Variables used by the tracking
         // ar & mTrackProjX;
         // ar & mTrackProjY;
@@ -85,18 +82,18 @@ class MapPoint {
                                              mNormalVector.size());
         // ar & BOOST_SERIALIZATION_NVP(mBackupObservationsId);
         // ar & mObservations;
-        ar& mBackupObservationsId1;
-        ar& mBackupObservationsId2;
+        ar & mBackupObservationsId1;
+        ar & mBackupObservationsId2;
         serializeMatrix(ar, mDescriptor, version);
-        ar& mBackupRefKFId;
+        ar & mBackupRefKFId;
         // ar & mnVisible;
         // ar & mnFound;
 
-        ar& mbBad;
-        ar& mBackupReplacedId;
+        ar & mbBad;
+        ar & mBackupReplacedId;
 
-        ar& mfMinDistance;
-        ar& mfMaxDistance;
+        ar & mfMinDistance;
+        ar & mfMaxDistance;
     }
 
 public:
@@ -153,9 +150,9 @@ public:
 
     void PrintObservations();
 
-    void PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP);
-    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid,
-                  map<long unsigned int, MapPoint*>& mpMPid);
+    void PreSave(std::set<KeyFrame*>& spKF, std::set<MapPoint*>& spMP);
+    void PostLoad(std::map<long unsigned int, KeyFrame*>& mpKFid,
+                  std::map<long unsigned int, MapPoint*>& mpMPid);
 
 public:
     long unsigned int mnId;

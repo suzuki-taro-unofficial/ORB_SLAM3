@@ -35,18 +35,15 @@
 #include <sophus/se3.hpp>
 #include <vector>
 
-#include "Converter.h"
-#include "GeometricTools.h"
-
 namespace ORB_SLAM3 {
 class GeometricCamera {
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar& mnId;
-        ar& mnType;
-        ar& mvParameters;
+        ar & mnId;
+        ar & mnType;
+        ar & mvParameters;
     }
 
 public:

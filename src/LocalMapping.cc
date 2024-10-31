@@ -23,9 +23,11 @@
 
 #include <mutex>
 
+#include "Atlas.h"
 #include "GeometricTools.h"
 #include "LoopClosing.h"
 #include "Optimizer.h"
+#include "Tracking.h"
 
 namespace ORB_SLAM3 {
 

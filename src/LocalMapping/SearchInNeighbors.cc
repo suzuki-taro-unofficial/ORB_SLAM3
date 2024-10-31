@@ -3,6 +3,7 @@
 #include "ORBmatcher.h"
 
 namespace ORB_SLAM3 {
+
 std::vector<ORB_SLAM3::KeyFrame*> GetNeighbors(const bool& mbMonocular,
                                                KeyFrame* mpCurrentKeyFrame,
                                                const bool& mbAbortBA,
