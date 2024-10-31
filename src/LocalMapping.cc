@@ -142,8 +142,6 @@ void LocalMapping::MapPointCulling() {
         nThObs = 3;
     const int cnThObs = nThObs;
 
-    int borrar = mlpRecentAddedMapPoints.size();
-
     while (lit != mlpRecentAddedMapPoints.end()) {
         MapPoint* pMP = *lit;
 
@@ -160,7 +158,6 @@ void LocalMapping::MapPointCulling() {
             lit = mlpRecentAddedMapPoints.erase(lit);
         else {
             lit++;
-            borrar--;
         }
     }
 }
