@@ -105,6 +105,7 @@ public:
      * 初期化も書き込みもされないため意味はなさそう。
      */
     Eigen::MatrixXd mcovInertial;
+    // TODO: 読む
     Eigen::Matrix3d mRwg;
     /**
      * current KFから取得したジャイロのバイアスが保持される。
