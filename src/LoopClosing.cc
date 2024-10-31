@@ -1561,7 +1561,7 @@ void LoopClosing::MergeLocal2() {
 
     const int numKFnew = pCurrentMap->KeyFramesInMap();
 
-    if (IsUseIMU() && !pCurrentMap->GetIniertialBA2()) {
+    if (!pCurrentMap->GetIniertialBA2()) {
         // Map is not completly initialized
         Eigen::Vector3d bg, ba;
         bg << 0., 0., 0.;
