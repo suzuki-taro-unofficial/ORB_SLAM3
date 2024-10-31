@@ -120,6 +120,12 @@ public:
      * ほぼ同上、ただし加速度のバイアス
      */
     Eigen::Vector3d mba;
+    /**
+     * スケール、拡大縮小の情報が入る。
+     *
+     * 使用する前に必ず1.0で初期化されOptimizerによって最適化された値を使用するため、
+     * メンバ変数ではなくローカルな変数に変更可能
+     */
     double mScale;
     double mInitTime;
     double mCostTime;
