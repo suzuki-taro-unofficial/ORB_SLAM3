@@ -19,14 +19,11 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
-
-#include <algorithm>
 #include <chrono>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <opencv2/core/core.hpp>
+
+#include "System.h"
 
 using namespace std;
 
@@ -100,10 +97,6 @@ int main(int argc, char **argv) {
     cv::Mat imLeft, imRight;
     for (seq = 0; seq < num_seq; seq++) {
         // Seq loop
-        double t_resize = 0;
-        double t_rect = 0;
-        double t_track = 0;
-        int num_rect = 0;
         int proccIm = 0;
         for (int ni = 0; ni < nImages[seq]; ni++, proccIm++) {
             // Read left and right images from file

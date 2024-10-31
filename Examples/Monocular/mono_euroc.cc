@@ -19,13 +19,12 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
-
-#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <opencv2/core/core.hpp>
+
+#include "System.h"
 
 using namespace std;
 
@@ -82,16 +81,11 @@ int main(int argc, char **argv) {
     cout << endl << "-------" << endl;
     cout.precision(17);
 
-    int fps = 20;
-    float dT = 1.f / fps;
     // Create SLAM system. It initializes all system threads and gets ready to
     // process frames.
     ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR,
                            false);
     float imageScale = SLAM.GetImageScale();
-
-    double t_resize = 0.f;
-    double t_track = 0.f;
 
     for (seq = 0; seq < num_seq; seq++) {
         // Main loop

@@ -19,14 +19,14 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
-
 #include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <opencv2/core/core.hpp>
+
+#include "System.h"
 
 using namespace std;
 
@@ -62,9 +62,6 @@ int main(int argc, char **argv) {
     cout << endl << "-------" << endl;
     cout << "Start processing sequence ..." << endl;
     cout << "Images in the sequence: " << nImages << endl << endl;
-
-    double t_track = 0.f;
-    double t_resize = 0.f;
 
     // Main loop
     cv::Mat imLeft, imRight;
