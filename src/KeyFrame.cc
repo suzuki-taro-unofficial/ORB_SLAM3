@@ -23,9 +23,9 @@
 
 #include <mutex>
 
+#include "CameraModels/GeometricCamera.h"
 #include "Converter.h"
 #include "Frame.h"
-#include "GeometricCamera.h"
 #include "ImuTypes.h"
 #include "KeyFrameDatabase.h"
 #include "Map.h"

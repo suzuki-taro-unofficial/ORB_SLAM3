@@ -21,8 +21,8 @@
 
 #include "G2oTypes.h"
 
+#include "CameraModels/GeometricCamera.h"
 #include "Frame.h"
-#include "GeometricCamera.h"
 #include "ImuTypes.h"
 #include "KeyFrame.h"
 

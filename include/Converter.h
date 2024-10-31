@@ -25,10 +25,10 @@
 #include <Eigen/Dense>
 #include <opencv2/core/core.hpp>
 
-#include "Thirdparty/Sophus/sophus/se3.hpp"
-#include "Thirdparty/Sophus/sophus/sim3.hpp"
-#include "Thirdparty/g2o/g2o/types/se3quat.h"
-#include "Thirdparty/g2o/g2o/types/sim3.h"
+#include "g2o/types/se3quat.h"
+#include "g2o/types/sim3.h"
+#include "sophus/se3.hpp"
+#include "sophus/sim3.hpp"
 
 namespace ORB_SLAM3 {
 

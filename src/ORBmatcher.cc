@@ -25,8 +25,8 @@
 
 #include <opencv2/core/core.hpp>
 
-#include "GeometricCamera.h"
-#include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
+#include "CameraModels/GeometricCamera.h"
+#include "DBoW2/FeatureVector.h"
 
 using namespace std;
 
