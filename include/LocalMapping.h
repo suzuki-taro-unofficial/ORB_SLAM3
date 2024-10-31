@@ -107,6 +107,8 @@ public:
     Eigen::MatrixXd mcovInertial;
     Eigen::Matrix3d mRwg;
     /**
+     * current KFから取得したジャイロのバイアスが保持される。
+     *
      * LocalMapping::InitializeIMUで書き込まれ、
      * そのままOptimizer::InertialOptimizationに渡される。
      * 書き込みするのに条件がかかっているので、ただのメモではない？
