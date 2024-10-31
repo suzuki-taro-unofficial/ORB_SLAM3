@@ -1,21 +1,9 @@
 .PHONY: build
 build:
-	@if [ ! -f "/.dockerenv" ]; then \
-		echo "please run this after make dev"; \
-	else \
-		./scripts/build.sh; \
-	fi
+	./scripts/build.sh
 
 run:
-	@if [ ! -f "/.dockerenv" ]; then \
-		echo "please run this after make dev"; \
-	else \
-		./scripts/run.sh; \
-	fi
+	./scripts/run.sh
 
 dev:
-	@if [ -f "/.dockerenv" ]; then \
-		echo "make dev doesn't works inside docker"; \
-	else \
-		./scripts/dev.sh; \
-	fi
+	./scripts/dev.sh

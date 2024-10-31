@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-readonly image_name="orb-slam3-dev"
-
-sudo docker compose run --build --rm -it dev
+if [ -f "/.dockerenv" ]; then
+    echo "cannot launch docker inside docker" 2>&1
+else
+    sudo docker compose run --build --rm -it dev
+fi
