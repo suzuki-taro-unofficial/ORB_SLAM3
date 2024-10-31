@@ -26,7 +26,7 @@
 
 #include <mutex>
 
-#include "Thirdparty/Sophus/sophus/se3.hpp"
+#include "sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 

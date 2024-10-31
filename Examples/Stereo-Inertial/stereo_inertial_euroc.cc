@@ -19,19 +19,15 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
-
-#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <sstream>
 
 #include "ImuTypes.h"
-#include "Optimizer.h"
+#include "System.h"
 
 using namespace std;
 
@@ -143,10 +139,6 @@ int main(int argc, char **argv) {
     for (seq = 0; seq < num_seq; seq++) {
         // Seq loop
         vector<ORB_SLAM3::IMU::Point> vImuMeas;
-        double t_rect = 0.f;
-        double t_resize = 0.f;
-        double t_track = 0.f;
-        int num_rect = 0;
         int proccIm = 0;
         for (int ni = 0; ni < nImages[seq]; ni++, proccIm++) {
             // Read left and right images from file

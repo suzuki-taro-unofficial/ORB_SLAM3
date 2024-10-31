@@ -29,10 +29,10 @@
 #include <boost/serialization/vector.hpp>
 #include <mutex>
 #include <opencv2/core/core.hpp>
-#include <sophus/se3.hpp>
 #include <vector>
 
 #include "SerializationUtils.h"
+#include "sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 

@@ -21,14 +21,13 @@
 
 #include "Frame.h"
 
-#include <include/CameraModels/KannalaBrandt8.h>
-#include <include/CameraModels/Pinhole.h>
-
 #include <thread>
 
+#include "CameraModels/GeometricCamera.h"
+#include "CameraModels/KannalaBrandt8.h"
+#include "CameraModels/Pinhole.h"
 #include "Converter.h"
 #include "G2oTypes.h"
-#include "GeometricCamera.h"
 #include "KeyFrame.h"
 #include "MapPoint.h"
 #include "ORBextractor.h"

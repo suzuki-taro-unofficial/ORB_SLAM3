@@ -30,7 +30,7 @@
 #include "Frame.h"
 #include "ImuTypes.h"
 #include "ORBVocabulary.h"
-#include "Thirdparty/Sophus/sophus/se3.hpp"
+#include "sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 

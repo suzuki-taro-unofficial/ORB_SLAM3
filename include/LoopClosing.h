@@ -29,7 +29,7 @@
 #include <utility>
 
 #include "ORBVocabulary.h"
-#include "Thirdparty/g2o/g2o/types/sim3.h"
+#include "g2o/types/sim3.h"
 
 namespace ORB_SLAM3 {
 

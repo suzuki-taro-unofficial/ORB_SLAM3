@@ -25,11 +25,10 @@
 #include <opencv2/core/core.hpp>
 #include <vector>
 
+#include "CameraModels/GeometricCamera.h"
 #include "Converter.h"
-#include "GeometricCamera.h"
 #include "KeyFrame.h"
 #include "MapPoint.h"
-#include "Thirdparty/DBoW2/DUtils/Random.h"
 
 namespace ORB_SLAM3 {
 

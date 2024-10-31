@@ -19,15 +19,15 @@
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <System.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <chrono>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <opencv2/core/core.hpp>
+
+#include "System.h"
 
 using namespace std;
 
@@ -105,9 +105,6 @@ int main(int argc, char **argv) {
 
     cv::Mat imLeft, imRight;
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-
-    double t_resize = 0.f;
-    double t_track = 0.f;
 
     int proccIm = 0;
     for (seq = 0; seq < num_seq; seq++) {
