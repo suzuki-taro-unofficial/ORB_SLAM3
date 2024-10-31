@@ -127,7 +127,15 @@ public:
      * メンバ変数ではなくローカルな変数に変更可能。SaveDebugDataで読み取られることを除けば
      */
     double mScale;
+    /**
+     * LocalMapping::InitializeIMUから書き込まれ,SaveDebugDataで読み取られる
+     */
     double mInitTime;
+    /**
+     * 書き込みは行われない。SaveDebugDataで読み取られる
+     *
+     * 消してよさそう
+     */
     double mCostTime;
 
     unsigned int mInitSect;
