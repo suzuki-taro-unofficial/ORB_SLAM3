@@ -1,5 +1,5 @@
 #include "Atlas.h"
-#include "GeometricCamera.h"
+#include "CameraModels/GeometricCamera.h"
 #include "GeometricTools.h"
 #include "LocalMapping.h"
 #include "Map.h"

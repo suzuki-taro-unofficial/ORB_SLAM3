@@ -27,14 +27,14 @@
 #include <set>
 #include <vector>
 
+#include "CameraModels/GeometricCamera.h"
+#include "CameraModels/KannalaBrandt8.h"
+#include "CameraModels/Pinhole.h"
 #include "Frame.h"
-#include "GeometricCamera.h"
-#include "KannalaBrandt8.h"
 #include "KeyFrame.h"
 #include "Map.h"
 #include "MapPoint.h"
 #include "ORBVocabulary.h"
-#include "Pinhole.h"
 
 namespace ORB_SLAM3 {
 

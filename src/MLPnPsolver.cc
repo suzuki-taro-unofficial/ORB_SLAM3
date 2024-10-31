@@ -53,8 +53,8 @@
 
 #include <Eigen/Sparse>
 
+#include "CameraModels/GeometricCamera.h"
 #include "Converter.h"
-#include "GeometricCamera.h"
 
 namespace ORB_SLAM3 {
 MLPnPsolver::MLPnPsolver(const Frame &F,

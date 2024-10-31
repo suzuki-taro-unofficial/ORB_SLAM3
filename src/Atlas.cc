@@ -21,9 +21,9 @@
 
 #include "Atlas.h"
 
-#include "GeometricCamera.h"
-#include "KannalaBrandt8.h"
-#include "Pinhole.h"
+#include "CameraModels/GeometricCamera.h"
+#include "CameraModels/KannalaBrandt8.h"
+#include "CameraModels/Pinhole.h"
 #include "Viewer.h"
 
 namespace ORB_SLAM3 {

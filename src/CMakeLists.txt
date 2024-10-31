@@ -68,16 +68,16 @@ target_link_libraries(${PROJECT_NAME}
     ${OpenCV_LIBS}
     ${EIGEN3_LIBS}
     ${Pangolin_LIBRARIES}
-    ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-    ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+    DBoW2
+    g2o
     -lboost_serialization
     -lcrypto
 )
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
-    PUBLIC ${PROJECT_SOURCE_DIR}/include/CameraModels
-    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${PROJECT_SOURCE_DIR}/Thirdparty/g2o
+    PUBLIC ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2
     PUBLIC ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
     PRIVATE ${EIGEN3_INCLUDE_DIR}
     PRIVATE ${Pangolin_INCLUDE_DIRS}

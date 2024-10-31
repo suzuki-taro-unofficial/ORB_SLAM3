@@ -27,11 +27,11 @@
 #include <map>
 #include <set>
 
+#include "DBoW2/BowVector.h"
+#include "DBoW2/FeatureVector.h"
 #include "ImuTypes.h"
 #include "ORBVocabulary.h"
-#include "Thirdparty/DBoW2/DBoW2/BowVector.h"
-#include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
-#include "Thirdparty/Sophus/sophus/se3.hpp"
+#include "sophus/se3.hpp"
 
 namespace ORB_SLAM3 {
 

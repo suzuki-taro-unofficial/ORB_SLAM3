@@ -24,9 +24,9 @@
 #include <iostream>
 #include <mutex>
 
+#include "CameraModels/GeometricCamera.h"
 #include "FrameDrawer.h"
 #include "G2oTypes.h"
-#include "GeometricCamera.h"
 #include "GeometricTools.h"
 #include "MLPnPsolver.h"
 #include "ORBextractor.h"
