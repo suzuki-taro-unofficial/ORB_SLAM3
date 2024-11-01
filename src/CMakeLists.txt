@@ -31,35 +31,6 @@ add_library(${PROJECT_NAME} SHARED
     GeometricTools.cc
     TwoViewReconstruction.cc
     Settings.cc
-    ${PROJECT_SOURCE_DIR}/include/System.h
-    ${PROJECT_SOURCE_DIR}/include/Tracking.h
-    ${PROJECT_SOURCE_DIR}/include/LocalMapping.h
-    ${PROJECT_SOURCE_DIR}/include/LoopClosing.h
-    ${PROJECT_SOURCE_DIR}/include/ORBextractor.h
-    ${PROJECT_SOURCE_DIR}/include/ORBmatcher.h
-    ${PROJECT_SOURCE_DIR}/include/FrameDrawer.h
-    ${PROJECT_SOURCE_DIR}/include/Converter.h
-    ${PROJECT_SOURCE_DIR}/include/MapPoint.h
-    ${PROJECT_SOURCE_DIR}/include/KeyFrame.h
-    ${PROJECT_SOURCE_DIR}/include/Atlas.h
-    ${PROJECT_SOURCE_DIR}/include/Map.h
-    ${PROJECT_SOURCE_DIR}/include/MapDrawer.h
-    ${PROJECT_SOURCE_DIR}/include/Optimizer.h
-    ${PROJECT_SOURCE_DIR}/include/Frame.h
-    ${PROJECT_SOURCE_DIR}/include/KeyFrameDatabase.h
-    ${PROJECT_SOURCE_DIR}/include/Sim3Solver.h
-    ${PROJECT_SOURCE_DIR}/include/Viewer.h
-    ${PROJECT_SOURCE_DIR}/include/ImuTypes.h
-    ${PROJECT_SOURCE_DIR}/include/G2oTypes.h
-    ${PROJECT_SOURCE_DIR}/include/CameraModels/GeometricCamera.h
-    ${PROJECT_SOURCE_DIR}/include/CameraModels/Pinhole.h
-    ${PROJECT_SOURCE_DIR}/include/CameraModels/KannalaBrandt8.h
-    ${PROJECT_SOURCE_DIR}/include/OptimizableTypes.h
-    ${PROJECT_SOURCE_DIR}/include/MLPnPsolver.h
-    ${PROJECT_SOURCE_DIR}/include/GeometricTools.h
-    ${PROJECT_SOURCE_DIR}/include/TwoViewReconstruction.h
-    ${PROJECT_SOURCE_DIR}/include/SerializationUtils.h
-    ${PROJECT_SOURCE_DIR}/include/Settings.h
 )
 
 target_link_libraries(${PROJECT_NAME}
