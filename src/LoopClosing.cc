@@ -1320,7 +1320,7 @@ void LoopClosing::MergeLocal() {
     }
 
     // Rebuild the essential graph in the local window
-    RebuildConnections(pCurrentMap, mpMergeMatchedKF, mpCurrentKF, pNewChild,
+    RebuildConnections(pCurrentMap, mpCurrentKF, mpMergeMatchedKF, pNewChild,
                        pNewParent);
 
     // Update the connections between the local window
@@ -1669,17 +1669,17 @@ void LoopClosing::MergeLocal2() {
 }
 
 // added
-void LoopClosing::RebuildConnections(Map* pMergeMap, KeyFrame* pMergeMatchedKF,
-                                     KeyFrame* pCurrentKF, KeyFrame*& pNewChild,
+void LoopClosing::RebuildConnections(Map* pNewMap, KeyFrame* pChildKF,
+                                     KeyFrame* pParentKF, KeyFrame*& pNewChild,
                                      KeyFrame*& pNewParent) {
-    pMergeMap->GetOriginKF()->SetFirstConnection(false);
+    pNewMap->GetOriginKF()->SetFirstConnection(false);
     pNewChild =
-        pMergeMatchedKF
+        pChildKF
             ->GetParent();  // Old parent, it will be the new child of this KF
-    pNewParent = pMergeMatchedKF;  // Old child, now it will be the parent of
-                                   // its own parent(we need eliminate this KF
-                                   // from children list in its old parent)
-    pMergeMatchedKF->ChangeParent(pCurrentKF);
+    pNewParent = pChildKF;  // Old child, now it will be the parent of
+                            // its own parent(we need eliminate this KF
+                            // from children list in its old parent)
+    pChildKF->ChangeParent(pParentKF);
     while (pNewChild) {
         pNewChild->EraseChild(
             pNewParent);  // We remove the relation between the old parent and
