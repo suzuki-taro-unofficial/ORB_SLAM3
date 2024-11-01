@@ -154,6 +154,10 @@ protected:
     void MergeLocal();
     void MergeLocal2();
 
+    void RebuildConnections(Map* pNewMap, KeyFrame* pChildKF,
+                            KeyFrame* pParentKF, KeyFrame*& pNewChild,
+                            KeyFrame*& pNewParent);  // added
+
     void StopGBAIfRunning();  // added
     void CheckObservations(set<KeyFrame*>& spKFsMap1,
                            set<KeyFrame*>& spKFsMap2);
