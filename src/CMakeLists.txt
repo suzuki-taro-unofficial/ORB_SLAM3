@@ -30,7 +30,6 @@ add_library(${PROJECT_NAME} SHARED
     MLPnPsolver.cc
     GeometricTools.cc
     TwoViewReconstruction.cc
-    Config.cc
     Settings.cc
 )
 
