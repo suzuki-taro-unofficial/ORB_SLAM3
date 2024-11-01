@@ -1320,25 +1320,8 @@ void LoopClosing::MergeLocal() {
     }
 
     // Rebuild the essential graph in the local window
-    pCurrentMap->GetOriginKF()->SetFirstConnection(false);
-    pNewChild =
-        mpCurrentKF
-            ->GetParent();  // Old parent, it will be the new child of this KF
-    pNewParent = mpCurrentKF;  // Old child, now it will be the parent of its
-                               // own parent(we need eliminate this KF from
-                               // children list in its old parent)
-    mpCurrentKF->ChangeParent(mpMergeMatchedKF);
-    while (pNewChild) {
-        pNewChild->EraseChild(
-            pNewParent);  // We remove the relation between the old parent and
-                          // the new for avoid loop
-        KeyFrame* pOldParent = pNewChild->GetParent();
-
-        pNewChild->ChangeParent(pNewParent);
-
-        pNewParent = pNewChild;
-        pNewChild = pOldParent;
-    }
+    RebuildConnections(pCurrentMap, mpMergeMatchedKF, mpCurrentKF, pNewChild,
+                       pNewParent);
 
     // Update the connections between the local window
     mpMergeMatchedKF->UpdateConnections();
