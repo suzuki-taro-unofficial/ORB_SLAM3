@@ -30,7 +30,6 @@ add_library(${PROJECT_NAME} SHARED
     MLPnPsolver.cc
     GeometricTools.cc
     TwoViewReconstruction.cc
-    Config.cc
     Settings.cc
     ${PROJECT_SOURCE_DIR}/include/System.h
     ${PROJECT_SOURCE_DIR}/include/Tracking.h
@@ -60,7 +59,6 @@ add_library(${PROJECT_NAME} SHARED
     ${PROJECT_SOURCE_DIR}/include/GeometricTools.h
     ${PROJECT_SOURCE_DIR}/include/TwoViewReconstruction.h
     ${PROJECT_SOURCE_DIR}/include/SerializationUtils.h
-    ${PROJECT_SOURCE_DIR}/include/Config.h
     ${PROJECT_SOURCE_DIR}/include/Settings.h
 )
 
